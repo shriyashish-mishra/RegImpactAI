@@ -1,0 +1,157 @@
+'use client'
+
+import { useState } from 'react'
+import { Button }   from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import type { ConfirmedModel, Question } from '@/lib/types'
+
+type Props = {
+  confirmedModel: ConfirmedModel
+  onComplete:     (answeredQuestions: Question[]) => void
+}
+
+function buildStubQuestions(): Question[] {
+  return [
+    {
+      id:        crypto.randomUUID(),
+      seq:       1,
+      prompt:    'How are loan funds disbursed to your customers?',
+      rationale: 'The Digital Lending Guidelines require disbursal directly to the borrower\'s bank account. Pass-through or nodal arrangements are a specific area of scrutiny — this answer determines whether DLG §5(i) applies to your product.',
+      answer:    null,
+    },
+    {
+      id:        crypto.randomUUID(),
+      seq:       2,
+      prompt:    'Is a Key Fact Statement (KFS) shown to the borrower before they accept a loan offer?',
+      rationale: 'DLG Para 6 requires a standardised KFS — including APR, all-in cost, and grievance details — before contract execution. I need to know whether your Loan offer screen currently includes this.',
+      answer:    null,
+    },
+    {
+      id:        crypto.randomUUID(),
+      seq:       3,
+      prompt:    'Do you offer a cooling-off period after loan acceptance?',
+      rationale: 'DLG Para 6 mandates a minimum 3-day cooling-off period for loans of 7 days or more. This determines whether your repayment flow needs a penalty-free withdrawal mechanism.',
+      answer:    null,
+    },
+  ]
+}
+
+export default function DiscoveryScreen({ confirmedModel, onComplete }: Props) {
+  const [questions, setQuestions] = useState<Question[]>(buildStubQuestions)
+  const [loading, setLoading]     = useState(false)
+
+  const activeIndex = questions.findIndex(q => q.answer === null)
+  const allAnswered = activeIndex === -1
+  const remaining   = questions.filter(q => q.answer === null).length
+
+  function handleAnswer(id: string, answer: string) {
+    setQuestions(prev => prev.map(q => q.id === id ? { ...q, answer } : q))
+  }
+
+  async function handleComplete() {
+    setLoading(true)
+    await new Promise(r => setTimeout(r, 400))
+    onComplete(questions)
+  }
+
+  return (
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
+          A few questions about {confirmedModel.product_name}
+        </h1>
+        <p className="text-slate-500 text-sm">
+          {allAnswered
+            ? 'All questions answered. Ready to assess.'
+            : `${remaining} question${remaining === 1 ? '' : 's'} remaining.`}
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {questions.map((q, i) => {
+          const isActive   = i === activeIndex
+          const isAnswered = q.answer !== null
+          const isUpcoming = !isActive && !isAnswered
+
+          return (
+            <div key={q.id} className={[
+              'flex flex-col gap-4 border rounded-xl px-5 py-5 transition-all',
+              isActive   ? 'border-indigo-300 bg-white shadow-sm'       : '',
+              isAnswered ? 'border-slate-200 bg-slate-50 opacity-80'    : '',
+              isUpcoming ? 'border-slate-100 bg-slate-50/50 opacity-50' : '',
+            ].join(' ')}>
+
+              <div className="flex items-start gap-3">
+                <span className={[
+                  'text-xs font-semibold w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5',
+                  isActive   ? 'bg-indigo-600 text-white'   : '',
+                  isAnswered ? 'bg-slate-800 text-white'     : '',
+                  isUpcoming ? 'bg-slate-200 text-slate-400' : '',
+                ].join(' ')}>
+                  {isAnswered ? '✓' : q.seq}
+                </span>
+                <p className="text-sm font-medium text-slate-800 leading-snug">{q.prompt}</p>
+              </div>
+
+              <div className="ml-9 px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-lg">
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  <span className="font-semibold text-slate-600">Why I&apos;m asking: </span>
+                  {q.rationale}
+                </p>
+              </div>
+
+              {isActive && (
+                <div className="ml-9">
+                  <AnswerInput question={q} onAnswer={answer => handleAnswer(q.id, answer)} />
+                </div>
+              )}
+
+              {isAnswered && (
+                <div className="ml-9 text-sm text-slate-600 italic">
+                  &ldquo;{q.answer}&rdquo;
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {allAnswered && (
+        <div className="flex justify-end pt-2 border-t border-slate-100">
+          <Button onClick={handleComplete} disabled={loading}>
+            {loading ? 'Preparing assessment…' : 'Generate assessment →'}
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function AnswerInput({ question, onAnswer }: { question: Question; onAnswer: (a: string) => void }) {
+  const [value, setValue] = useState('')
+
+  function submit() {
+    const t = value.trim()
+    if (t) onAnswer(t)
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Textarea
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        placeholder="Type your answer…"
+        rows={2}
+        className="resize-none"
+        onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit() } }}
+        autoFocus
+      />
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-slate-400">Enter to confirm</span>
+        <Button size="sm" onClick={submit} disabled={value.trim().length === 0}>
+          Confirm →
+        </Button>
+      </div>
+    </div>
+  )
+}
