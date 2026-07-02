@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import SiteHeader       from '@/components/shell/SiteHeader'
 import StepIndicator    from '@/components/shell/StepIndicator'
 import SeedScreen       from '@/components/screens/SeedScreen'
 import MirrorScreen     from '@/components/screens/MirrorScreen'
@@ -49,16 +50,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <SiteHeader current="home" />
       <div className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-3xl px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-semibold text-slate-900 tracking-tight">
-              RegImpact AI
-            </span>
-            <span className="text-xs text-slate-400">
-              Regulatory Impact Assessment
-            </span>
-          </div>
           <StepIndicator currentStep={STEP_NUMBER[step]} />
         </div>
       </div>

@@ -6,7 +6,7 @@ RegImpact AI analyzes a fintech product, identifies applicable RBI regulations, 
 
 ## Live Demo
 
-* **Live Demo:** https://YOUR-VERCEL-URL.vercel.app/demo/sample
+* **Live Demo:** https://YOUR-VERCEL-URL.vercel.app/demo/sample — zero-setup, no API keys needed
 * **Case Study:** https://YOUR-VERCEL-URL.vercel.app/case-study
 * **Architecture:** https://YOUR-VERCEL-URL.vercel.app/architecture
 
