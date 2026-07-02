@@ -23,13 +23,13 @@ export default function NarratedProgress({ steps, complete }: Props) {
           <div key={i} className="flex items-start gap-2.5">
             <span aria-hidden="true" className={[
               'text-xs mt-0.5 shrink-0',
-              done        ? 'text-emerald-400' : 'text-slate-400 animate-pulse',
+              done        ? 'text-emerald-400' : 'text-slate-500 animate-pulse',
             ].join(' ')}>
               {done ? '✓' : '⟳'}
             </span>
             <span className={[
               'text-xs leading-relaxed font-mono',
-              isLast && !complete ? 'text-white' : 'text-slate-400',
+              isLast && !complete ? 'text-white' : 'text-slate-500',
             ].join(' ')}>
               <span className="sr-only">{done ? 'Done: ' : 'In progress: '}</span>
               {step}

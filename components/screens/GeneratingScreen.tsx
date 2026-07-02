@@ -135,7 +135,7 @@ export default function GeneratingScreen({ confirmedModel, questions, assessment
               <div className="pl-4 flex flex-col gap-1.5">
                 {finding.impacts.map((impact, j) => (
                   <div key={j} className="flex items-start gap-2">
-                    <span className="text-xs font-semibold text-slate-400 w-20 shrink-0 mt-0.5 uppercase tracking-wide">
+                    <span className="text-xs font-semibold text-slate-500 w-20 shrink-0 mt-0.5 uppercase tracking-wide">
                       {LENS_LABEL[impact.lens]}
                     </span>
                     <span className="text-xs text-slate-600">{impact.description}</span>

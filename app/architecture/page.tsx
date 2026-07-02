@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   openGraph: { title: TITLE, description: DESCRIPTION },
-  twitter: { title: TITLE, description: DESCRIPTION },
+  twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION },
 }
 
 const PIPELINE = [
@@ -50,7 +50,7 @@ export default function ArchitecturePage() {
         </div>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
             Pipeline
           </h2>
           <div className="flex flex-col gap-2">
@@ -62,7 +62,7 @@ export default function ArchitecturePage() {
                 <div className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-medium text-slate-800">{item.step}</span>
-                    <code className="text-xs font-mono text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">{item.route}</code>
+                    <code className="text-xs font-mono text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded">{item.route}</code>
                   </div>
                   <span className="text-xs text-slate-500 leading-relaxed">{item.detail}</span>
                 </div>
@@ -72,7 +72,7 @@ export default function ArchitecturePage() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
             Streaming
           </h2>
           <p className="text-sm text-slate-600 leading-relaxed">
@@ -87,7 +87,7 @@ export default function ArchitecturePage() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
             Data model
           </h2>
           <div className="flex flex-col gap-2">
@@ -98,14 +98,14 @@ export default function ArchitecturePage() {
               </div>
             ))}
           </div>
-          <p className="text-xs text-slate-400 leading-relaxed">
+          <p className="text-xs text-slate-500 leading-relaxed">
             The regulatory corpus itself is not in Postgres — it&apos;s a curated array in{' '}
             <code className="font-mono bg-slate-100 px-1 py-0.5 rounded">lib/corpus.ts</code>, filtered by area code.
           </p>
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
             Current scope
           </h2>
           <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">

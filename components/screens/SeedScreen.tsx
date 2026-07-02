@@ -69,7 +69,7 @@ export default function SeedScreen({ onComplete }: Props) {
           className="resize-none"
           disabled={loading}
         />
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-500">
           {description.trim().length < 30
             ? `${30 - description.trim().length} more characters to continue`
             : 'Ready to analyse'}

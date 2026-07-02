@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   openGraph: { title: TITLE, description: DESCRIPTION },
-  twitter: { title: TITLE, description: DESCRIPTION },
+  twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION },
 }
 
 const WORKFLOW = [
@@ -50,7 +50,7 @@ export default function CaseStudyPage() {
         </div>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
             The problem
           </h2>
           <p className="text-sm text-slate-600 leading-relaxed">
@@ -63,7 +63,21 @@ export default function CaseStudyPage() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
+            The product decision
+          </h2>
+          <p className="text-sm text-slate-600 leading-relaxed">
+            The obvious way to make an AI compliance demo look impressive is breadth — cover every
+            RBI regulation shallowly. I decided against that. A trust-focused product loses all
+            its credibility the first time a reviewer catches one fabricated citation, so I scoped
+            this to prove the citation-verification mechanism end to end on a single regulatory
+            area first (Digital Lending Guidelines), before adding a second. Depth on one area
+            that a compliance reviewer can actually trust beats coverage on five they can&apos;t.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
             The approach
           </h2>
           <div className="flex flex-col gap-2">
@@ -82,7 +96,7 @@ export default function CaseStudyPage() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
             What makes this different
           </h2>
           <p className="text-sm text-slate-600 leading-relaxed">
@@ -96,7 +110,36 @@ export default function CaseStudyPage() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
+            A trade-off I made explicitly
+          </h2>
+          <p className="text-sm text-slate-600 leading-relaxed">
+            When I added a second regulatory area (KYC/AML), I didn&apos;t have a verified source
+            document for it — only general knowledge of what the regulation covers. I had three
+            options: leave it out, ship it looking identical to the verified DLG clauses, or ship
+            it with an explicit &ldquo;unverified — needs legal review&rdquo; flag that follows
+            the citation everywhere it&apos;s shown. I chose the third. A compliance tool that
+            quietly hides its own uncertainty is more dangerous than one that discloses it — and
+            hiding it would have contradicted the entire premise of this project.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
+            How I&apos;d measure this if it were live
+          </h2>
+          <p className="text-sm text-slate-600 leading-relaxed">
+            This is a demo, not a product with real users yet — so these are the metrics I&apos;d
+            instrument first, not results I&apos;m claiming: the percentage of findings a human
+            compliance reviewer accepts without edits (the real test of citation trust), time from
+            product description to first finding, and how often reviewers escalate an unverified
+            citation versus a verified one — which would tell me whether the &ldquo;needs legal
+            review&rdquo; flag is actually changing reviewer behavior or just being ignored.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
             Tech stack
           </h2>
           <ul className="flex flex-col gap-1.5">
@@ -110,14 +153,16 @@ export default function CaseStudyPage() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
             What&apos;s next
           </h2>
           <p className="text-sm text-slate-600 leading-relaxed">
-            The current build covers one regulatory area end to end (RBI&apos;s Digital Lending
-            Guidelines) to prove the citation-verification approach works before scaling it out.
-            Next: more regulatory domains, authentication and report history, and PDF export. See
-            the <Link href="/architecture" className="text-indigo-600 hover:underline">architecture walkthrough</Link>{' '}
+            The current build covers two regulatory areas end to end — RBI&apos;s Digital Lending
+            Guidelines (fully verified) and KYC/AML (flagged unverified until checked against the
+            current source text) — to prove the citation-verification approach generalizes before
+            scaling it further. Next: verifying the KYC/AML corpus against the real regulation,
+            more regulatory domains, and full multi-user auth. See the{' '}
+            <Link href="/architecture" className="text-indigo-600 hover:underline">architecture walkthrough</Link>{' '}
             for the current scope in detail.
           </p>
         </section>

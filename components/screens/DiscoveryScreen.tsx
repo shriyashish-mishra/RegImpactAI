@@ -123,7 +123,7 @@ export default function DiscoveryScreen({ confirmedModel, onComplete }: Props) {
                   'text-xs font-semibold w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5',
                   isActive   ? 'bg-indigo-600 text-white'   : '',
                   isAnswered ? 'bg-slate-800 text-white'     : '',
-                  isUpcoming ? 'bg-slate-200 text-slate-400' : '',
+                  isUpcoming ? 'bg-slate-200 text-slate-500' : '',
                 ].join(' ')}>
                   {isAnswered ? '✓' : q.seq}
                 </span>
@@ -184,7 +184,7 @@ function AnswerInput({ question, onAnswer }: { question: Question; onAnswer: (a:
         autoFocus
       />
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-400">Enter to confirm</span>
+        <span className="text-xs text-slate-500">Enter to confirm</span>
         <Button size="sm" onClick={submit} disabled={value.trim().length === 0}>
           Confirm →
         </Button>

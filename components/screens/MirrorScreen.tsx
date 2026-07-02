@@ -56,14 +56,14 @@ export default function MirrorScreen({ draftModel, assessmentId, onConfirm, onSt
 
       {/* Product elements */}
       <section className="flex flex-col gap-3">
-        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
           Product elements
         </h2>
         <div className="flex flex-col gap-2">
           {positive.map((el, i) => (
             <div key={i} className="flex items-center justify-between px-4 py-3 bg-white border border-slate-200 rounded-lg">
               <div className="flex items-center gap-3">
-                <span className="text-xs text-slate-400 font-medium w-16 shrink-0">
+                <span className="text-xs text-slate-500 font-medium w-16 shrink-0">
                   {ELEMENT_LABEL[el.element_type]}
                 </span>
                 <span className="text-sm text-slate-800">{el.label}</span>
@@ -74,14 +74,14 @@ export default function MirrorScreen({ draftModel, assessmentId, onConfirm, onSt
           {negative.map((el, i) => (
             <div key={i} className="flex items-center justify-between px-4 py-3 bg-slate-50 border border-dashed border-slate-200 rounded-lg">
               <div className="flex items-center gap-3">
-                <span className="text-xs text-slate-400 font-medium w-16 shrink-0">
+                <span className="text-xs text-slate-500 font-medium w-16 shrink-0">
                   {ELEMENT_LABEL[el.element_type]}
                 </span>
-                <span className="text-sm text-slate-400 italic">
+                <span className="text-sm text-slate-500 italic">
                   {el.label} — not detected
                 </span>
               </div>
-              <span className="text-xs text-slate-400">add if I missed it</span>
+              <span className="text-xs text-slate-500">add if I missed it</span>
             </div>
           ))}
         </div>
@@ -89,10 +89,10 @@ export default function MirrorScreen({ draftModel, assessmentId, onConfirm, onSt
 
       {/* Triggered areas */}
       <section className="flex flex-col gap-3">
-        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
           Regulations in scope
         </h2>
-        <p className="text-xs text-slate-400 leading-relaxed -mt-1">
+        <p className="text-xs text-slate-500 leading-relaxed -mt-1">
           Only Digital Lending Guidelines (DLG) and KYC / AML findings are generated today —
           other areas below are shown for context, not yet assessed. KYC / AML citations are
           unverified against the current regulation and marked as such in the report.
@@ -113,9 +113,9 @@ export default function MirrorScreen({ draftModel, assessmentId, onConfirm, onSt
             <div key={i} className={`flex items-start justify-between px-4 py-3 border rounded-lg ${TRIGGER_STYLE[area.status]}`}>
               <div className="flex flex-col gap-0.5">
                 <span className="text-sm font-medium text-slate-500">{area.area_name}</span>
-                <span className="text-xs text-slate-400">{area.reason}</span>
+                <span className="text-xs text-slate-500">{area.reason}</span>
               </div>
-              <Badge variant="outline" className="text-xs shrink-0 ml-4 mt-0.5 border-slate-200 text-slate-400">
+              <Badge variant="outline" className="text-xs shrink-0 ml-4 mt-0.5 border-slate-200 text-slate-500">
                 Not triggered
               </Badge>
             </div>
@@ -126,7 +126,7 @@ export default function MirrorScreen({ draftModel, assessmentId, onConfirm, onSt
       <div className="flex items-center justify-between pt-2 border-t border-slate-100">
         <button
           onClick={onStartOver}
-          className="text-sm text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors"
+          className="text-sm text-slate-500 hover:text-slate-600 underline underline-offset-2 transition-colors"
         >
           ← This is wrong, start over
         </button>

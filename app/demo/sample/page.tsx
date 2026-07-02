@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   openGraph: { title: TITLE, description: DESCRIPTION },
-  twitter: { title: TITLE, description: DESCRIPTION },
+  twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION },
 }
 
 export default function SampleDemoPage() {
@@ -26,7 +26,7 @@ export default function SampleDemoPage() {
         <SiteHeader current="sample" />
 
         <div className="mx-auto max-w-3xl px-6 pt-8">
-          <p className="text-xs text-slate-400 bg-slate-100 border border-slate-200 rounded-lg px-4 py-3 leading-relaxed">
+          <p className="text-xs text-slate-500 bg-slate-100 border border-slate-200 rounded-lg px-4 py-3 leading-relaxed">
             This is a static sample report — no API calls, no setup required. Its findings cite
             real clauses from the same regulatory corpus the live assessment flow uses.{' '}
             <a href="/" className="text-indigo-600 hover:underline">

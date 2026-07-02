@@ -16,20 +16,20 @@ const LINKS: { key: NavKey; href: string; label: string }[] = [
 export default function SiteHeader({ current = 'home' }: Props) {
   return (
     <div className="border-b border-slate-200 bg-white">
-      <div className="mx-auto max-w-3xl px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="text-sm font-semibold text-slate-900 tracking-tight">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 py-4 flex items-center justify-between flex-wrap gap-x-4 gap-y-2">
+        <Link href="/" className="text-sm font-semibold text-slate-900 tracking-tight shrink-0">
           RegImpact AI
         </Link>
-        <nav className="flex items-center gap-5">
+        <nav className="flex items-center flex-wrap gap-x-4 gap-y-1.5">
           {LINKS.map(link => (
             <Link
               key={link.key}
               href={link.href}
               className={[
-                'text-xs font-medium transition-colors',
+                'text-xs font-medium transition-colors whitespace-nowrap',
                 current === link.key
                   ? 'text-indigo-600'
-                  : 'text-slate-400 hover:text-slate-600',
+                  : 'text-slate-500 hover:text-slate-600',
               ].join(' ')}
             >
               {link.label}
@@ -39,7 +39,7 @@ export default function SiteHeader({ current = 'home' }: Props) {
             href={GITHUB_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors"
+            className="text-xs font-medium text-slate-500 hover:text-slate-600 transition-colors whitespace-nowrap"
           >
             GitHub
           </a>

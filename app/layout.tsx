@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { SITE_URL } from '@/lib/site'
+import SiteFooter from '@/components/shell/SiteFooter'
 
 const TITLE = 'RegImpact AI'
 const DESCRIPTION =
@@ -33,6 +34,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-slate-50 text-slate-900 antialiased font-sans">
         {children}
+        <SiteFooter />
       </body>
     </html>
   )

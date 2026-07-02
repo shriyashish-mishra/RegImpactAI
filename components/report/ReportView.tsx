@@ -44,7 +44,7 @@ export default function ReportView({ report }: Props) {
         </span>
         <h1 className="text-2xl font-semibold text-slate-900">{assessment.product_name}</h1>
         <p className="text-sm text-slate-500 leading-relaxed">{assessment.description}</p>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-500">
           Assessment <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">{assessment.id}</span>
           {' · '}
           {new Date(assessment.created_at).toLocaleDateString()}
@@ -77,7 +77,7 @@ export default function ReportView({ report }: Props) {
                   <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${SEVERITY_DOT[finding.severity]}`} />
                   <div className="flex flex-col gap-0.5">
                     <h3 className="text-sm font-semibold text-slate-900 leading-snug">{finding.title}</h3>
-                    <span className="text-xs text-slate-400">{finding.area_name}</span>
+                    <span className="text-xs text-slate-500">{finding.area_name}</span>
                   </div>
                 </div>
                 <ConfidenceBadge level={finding.confidence} />
@@ -90,7 +90,7 @@ export default function ReportView({ report }: Props) {
                 <div className="pl-4 flex flex-col gap-1.5">
                   {finding.impacts.map((impact, j) => (
                     <div key={j} className="flex items-start gap-2">
-                      <span className="text-xs font-semibold text-slate-400 w-20 shrink-0 mt-0.5 uppercase tracking-wide">
+                      <span className="text-xs font-semibold text-slate-500 w-20 shrink-0 mt-0.5 uppercase tracking-wide">
                         {LENS_LABEL[impact.lens]}
                       </span>
                       <span className="text-xs text-slate-600">{impact.description}</span>

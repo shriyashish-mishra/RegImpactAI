@@ -20,15 +20,18 @@ export default function StepIndicator({ currentStep }: Props) {
                 'w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-colors',
                 isComplete ? 'bg-slate-800 text-white'                          : '',
                 isActive   ? 'bg-indigo-600 text-white ring-2 ring-indigo-300'  : '',
-                isUpcoming ? 'bg-slate-100 text-slate-400'                      : '',
+                isUpcoming ? 'bg-slate-100 text-slate-500'                      : '',
               ].join(' ')}>
                 {isComplete ? '✓' : stepNum}
               </div>
+              {/* Labels hide below sm: on narrow phone widths five fixed-width
+                  labels would overflow the row; the numbered circles alone
+                  still convey progress. */}
               <span className={[
-                'text-xs font-medium whitespace-nowrap',
+                'hidden sm:inline text-xs font-medium whitespace-nowrap',
                 isComplete ? 'text-slate-600'  : '',
                 isActive   ? 'text-indigo-600' : '',
-                isUpcoming ? 'text-slate-400'  : '',
+                isUpcoming ? 'text-slate-500'  : '',
               ].join(' ')}>
                 {label}
               </span>
