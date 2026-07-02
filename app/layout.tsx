@@ -3,7 +3,8 @@ import './globals.css'
 import { SITE_URL } from '@/lib/site'
 import SiteFooter from '@/components/shell/SiteFooter'
 
-const TITLE = 'RegImpact AI'
+const SITE_NAME = 'RegImpact AI'
+const TITLE = 'RegImpact AI — AI Compliance Assessment for Indian Fintech'
 const DESCRIPTION =
   'AI-powered Regulatory Impact Assessment for Indian fintech — every finding is backed by a verified regulatory citation.'
 
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: SITE_URL,
-    siteName: TITLE,
+    siteName: SITE_NAME,
     type: 'website',
   },
   twitter: {

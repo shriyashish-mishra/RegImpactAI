@@ -37,7 +37,9 @@ export default function AdminLoginPage() {
           <h1 className="text-lg font-semibold text-slate-900">Admin</h1>
           <p className="text-sm text-slate-500">Report history — owner access only.</p>
         </div>
+        <label htmlFor="admin-password" className="sr-only">Password</label>
         <input
+          id="admin-password"
           type="password"
           value={password}
           onChange={e => setPassword(e.target.value)}
