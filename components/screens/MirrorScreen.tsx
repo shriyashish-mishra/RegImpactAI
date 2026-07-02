@@ -9,6 +9,7 @@ type Props = {
   draftModel:   DraftModel
   assessmentId: string
   onConfirm:    (model: ConfirmedModel) => void
+  onStartOver:  () => void
 }
 
 const ELEMENT_LABEL: Record<ProductElement['element_type'], string> = {
@@ -25,7 +26,7 @@ const TRIGGER_STYLE: Record<TriggeredArea['status'], string> = {
   not_applicable: 'bg-slate-50 border-slate-200',
 }
 
-export default function MirrorScreen({ draftModel, assessmentId, onConfirm }: Props) {
+export default function MirrorScreen({ draftModel, assessmentId, onConfirm, onStartOver }: Props) {
   function handleConfirm() {
     const confirmed: ConfirmedModel = {
       assessment_id:   assessmentId,
@@ -91,6 +92,11 @@ export default function MirrorScreen({ draftModel, assessmentId, onConfirm }: Pr
         <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
           Regulations in scope
         </h2>
+        <p className="text-xs text-slate-400 leading-relaxed -mt-1">
+          Only Digital Lending Guidelines (DLG) and KYC / AML findings are generated today —
+          other areas below are shown for context, not yet assessed. KYC / AML citations are
+          unverified against the current regulation and marked as such in the report.
+        </p>
         <div className="flex flex-col gap-2">
           {triggered.map((area, i) => (
             <div key={i} className={`flex items-start justify-between px-4 py-3 border rounded-lg ${TRIGGER_STYLE[area.status]}`}>
@@ -119,7 +125,7 @@ export default function MirrorScreen({ draftModel, assessmentId, onConfirm }: Pr
 
       <div className="flex items-center justify-between pt-2 border-t border-slate-100">
         <button
-          onClick={() => window.history.back()}
+          onClick={onStartOver}
           className="text-sm text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors"
         >
           ← This is wrong, start over

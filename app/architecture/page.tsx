@@ -2,9 +2,14 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import SiteHeader from '@/components/shell/SiteHeader'
 
+const TITLE = 'Architecture — RegImpact AI'
+const DESCRIPTION = 'How RegImpact AI is built, end to end.'
+
 export const metadata: Metadata = {
-  title: 'Architecture — RegImpact AI',
-  description: 'How RegImpact AI is built, end to end.',
+  title: TITLE,
+  description: DESCRIPTION,
+  openGraph: { title: TITLE, description: DESCRIPTION },
+  twitter: { title: TITLE, description: DESCRIPTION },
 }
 
 const PIPELINE = [
@@ -105,12 +110,23 @@ export default function ArchitecturePage() {
           </h2>
           <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">
             <p className="text-sm text-amber-900 leading-relaxed">
-              Only one regulatory area — RBI&apos;s Digital Lending Guidelines (DLG) — has
-              corpus clauses to test against today. The product model and discovery questions
-              may reference KYC/AML or PPI as &ldquo;in scope&rdquo;, but no findings are ever
-              generated for those areas yet, since there&apos;s nothing in the corpus to test them
-              against. This is a deliberate MVP boundary, not a bug: the goal was to prove the
-              citation-verification approach end to end on one domain before expanding it.
+              Two regulatory areas — RBI&apos;s Digital Lending Guidelines (DLG) and KYC/AML —
+              have corpus clauses to test against today. The product model and discovery
+              questions may reference PPI as &ldquo;in scope&rdquo;, but no findings are ever
+              generated for it, since there&apos;s nothing in the corpus to test it against.
+              This is a deliberate MVP boundary, not a bug: the goal was to prove the
+              citation-verification approach end to end before expanding further.
+            </p>
+          </div>
+          <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-sm text-amber-900 leading-relaxed">
+              The KYC/AML clauses specifically are <strong>unverified</strong> — reconstructed
+              from general knowledge of RBI&apos;s KYC Master Direction, not transcribed from the
+              current source document. The DLG clauses are verbatim excerpts and remain fully
+              verified. Every citation in a report carries this flag; unverified ones render an
+              explicit &ldquo;needs legal review&rdquo; notice rather than being presented as
+              equally trustworthy. Don&apos;t rely on a KYC/AML finding for an actual compliance
+              decision.
             </p>
           </div>
         </section>

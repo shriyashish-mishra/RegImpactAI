@@ -17,6 +17,7 @@ const clause = (id: string) => {
     clause_ref: c.clause_ref,
     clause_text: c.text,
     source_title: c.source_title,
+    verified: c.verified,
   }
 }
 
@@ -96,6 +97,31 @@ const findings: Finding[] = [
     recommendations: [
       'Request contact/SMS access only at the point of specific need, not at signup.',
       'Add per-permission purpose disclosure and consent capture before each request.',
+    ],
+  },
+  {
+    id: 'demo-finding-4',
+    assessment_id: ASSESSMENT_ID,
+    area_code: 'KYC_AML',
+    area_name: 'KYC / AML',
+    title: 'No risk categorisation described for onboarded customers',
+    what_found:
+      'The product description does not mention categorising customers into risk tiers (low/medium/high) as part of onboarding — video KYC is mentioned, but not what happens with the identity data afterward.',
+    why_matters:
+      "Risk-based customer categorisation is a foundational KYC/AML control: it determines how often a customer's KYC is refreshed and whether enhanced due diligence applies. Skipping it flattens every customer to the same due-diligence level regardless of actual risk.",
+    severity: 'medium',
+    confidence: 'moderate',
+    driver_clarity: 'moderate',
+    driver_understanding: 'low',
+    impacts: [
+      { lens: 'product', description: 'Onboarding needs a risk-scoring step that assigns each customer a tier before the account is activated.' },
+      { lens: 'engineering', description: 'Customer records need a risk-tier field driving periodic KYC-refresh scheduling, not a one-time onboarding check.' },
+      { lens: 'business', description: 'Regulators expect risk categorisation as a baseline control — its absence is typically flagged early in an AML audit.' },
+    ],
+    citations: [clause('b2c3d4e5-0002-0002-0002-000000000002')],
+    recommendations: [
+      'Add a risk-categorisation step to onboarding that scores each customer low/medium/high.',
+      'Schedule periodic KYC refresh intervals keyed to the assigned risk tier.',
     ],
   },
 ]

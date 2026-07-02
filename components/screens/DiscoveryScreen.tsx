@@ -50,6 +50,13 @@ export default function DiscoveryScreen({ confirmedModel, onComplete }: Props) {
 
   function handleAnswer(id: string, answer: string) {
     setQuestions(prev => prev.map(q => q.id === id ? { ...q, answer } : q))
+    // Best-effort persistence — the wizard already has the answer in local
+    // state and doesn't wait on this to proceed.
+    fetch(`/api/questions/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answer }),
+    }).catch(() => {})
   }
 
   async function handleComplete() {

@@ -97,6 +97,11 @@ export type CorpusClause = {
   clause_ref:   string   // e.g. 'DLG Para 5 (i)'
   text:         string
   source_title: string
+  // true only for clauses transcribed directly from a verified source document.
+  // false means the text was reconstructed from general knowledge and has not
+  // been checked against the current regulation — must be surfaced in the UI,
+  // never presented as an equally-trustworthy citation.
+  verified:     boolean
 }
 
 
@@ -113,11 +118,14 @@ export type FindingImpact = {
 
 // corpus_clause_id joins to corpus_clauses.id (UUID join, not text match).
 // clause_ref and clause_text are denormalised for display.
+// verified is resolved server-side from the corpus (lib/corpus.ts), never
+// trusted from the model's own output — see app/api/generate/route.ts.
 export type FindingCitation = {
   corpus_clause_id: string
   clause_ref:       string
   clause_text:      string
   source_title:     string
+  verified:         boolean
 }
 
 export type FindingSeverity = 'high' | 'medium' | 'low'
@@ -224,4 +232,5 @@ export type FindingCitationRow = {
   clause_ref:       string
   clause_text:      string
   source_title:     string
+  verified:         boolean
 }

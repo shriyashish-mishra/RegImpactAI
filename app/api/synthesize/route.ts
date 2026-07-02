@@ -3,6 +3,7 @@ import { generateText } from 'ai'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
 import { buildSynthesizeSystemPrompt, buildSynthesizeUserPrompt } from '@/lib/prompts/synthesize'
+import { requireEnv } from '@/lib/env'
 import type { SynthesisResponse } from '@/lib/types'
 
 export const maxDuration = 60
@@ -49,6 +50,13 @@ export async function POST(req: Request) {
     )
   }
   const { description } = parsedRequest.data
+
+  try {
+    requireEnv('ANTHROPIC_API_KEY')
+  } catch (err) {
+    console.error('[synthesize]', err)
+    return Response.json({ error: 'Server misconfigured: missing ANTHROPIC_API_KEY' }, { status: 500 })
+  }
 
   let rawText: string
   try {

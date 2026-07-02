@@ -48,6 +48,14 @@ export default function Home() {
     }
   }
 
+  function handleStartOver() {
+    setStep('seed')
+    setDraftModel(null)
+    setConfirmedModel(null)
+    setQuestions([])
+    setAssessmentId(null)
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
       <SiteHeader current="home" />
@@ -66,6 +74,7 @@ export default function Home() {
             draftModel={draftModel}
             assessmentId={assessmentId}
             onConfirm={handleModelConfirmed}
+            onStartOver={handleStartOver}
           />
         )}
         {step === 'discovery' && confirmedModel && (

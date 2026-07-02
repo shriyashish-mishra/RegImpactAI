@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { GITHUB_URL } from '@/lib/site'
 
 type NavKey = 'home' | 'sample' | 'case-study' | 'architecture'
 
@@ -34,6 +35,14 @@ export default function SiteHeader({ current = 'home' }: Props) {
               {link.label}
             </Link>
           ))}
+          <a
+            href={GITHUB_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            GitHub
+          </a>
         </nav>
       </div>
     </div>

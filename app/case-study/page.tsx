@@ -2,9 +2,14 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import SiteHeader from '@/components/shell/SiteHeader'
 
+const TITLE = 'Case Study — RegImpact AI'
+const DESCRIPTION = 'Why RegImpact AI was built, and how it works.'
+
 export const metadata: Metadata = {
-  title: 'Case Study — RegImpact AI',
-  description: 'Why RegImpact AI was built, and how it works.',
+  title: TITLE,
+  description: DESCRIPTION,
+  openGraph: { title: TITLE, description: DESCRIPTION },
+  twitter: { title: TITLE, description: DESCRIPTION },
 }
 
 const WORKFLOW = [

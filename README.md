@@ -6,9 +6,9 @@ RegImpact AI analyzes a fintech product, identifies applicable RBI regulations, 
 
 ## Live Demo
 
-* **Live Demo:** https://YOUR-VERCEL-URL.vercel.app/demo/sample — zero-setup, no API keys needed
-* **Case Study:** https://YOUR-VERCEL-URL.vercel.app/case-study
-* **Architecture:** https://YOUR-VERCEL-URL.vercel.app/architecture
+* **Live Demo:** https://reg-impact-ai.vercel.app/demo/sample — zero-setup, no API keys needed
+* **Case Study:** https://reg-impact-ai.vercel.app/case-study
+* **Architecture:** https://reg-impact-ai.vercel.app/architecture
 
 ## Why I Built This
 
@@ -18,17 +18,19 @@ This project focuses on trust. Every compliance finding is backed by verified re
 
 ## Features
 
-* AI-powered regulatory assessment
+* AI-powered regulatory assessment across two regulatory areas (DLG, KYC/AML)
 * Dynamic clarification questions
-* Citation-backed compliance findings
-* Consultant-style report generation
+* Citation-backed compliance findings, with unverified citations explicitly flagged
+* Consultant-style report generation, streamed live as findings are produced
+* Owner report history (password-gated, at `/admin`)
+* PDF export (browser print, on every report)
 * Interactive architecture walkthrough
 * End-to-end product case study
 * Zero-setup sample demo
 
 ## Tech Stack
 
-* Next.js 15
+* Next.js 16
 * React
 * TypeScript
 * Tailwind CSS
@@ -48,11 +50,11 @@ This project focuses on trust. Every compliance finding is backed by verified re
 ## Project Structure
 
 ```text
-app/
-components/
-lib/
-public/
-styles/
+app/          routes, layouts, API handlers
+components/   screens, shell, and shared UI primitives
+lib/          prompts, Supabase clients, corpus, shared types
+public/       static assets
+supabase/     SQL migrations
 ```
 
 ## Local Development
@@ -70,19 +72,24 @@ Create a `.env.local` file containing:
 ANTHROPIC_API_KEY=
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+
+# Required only for /admin (report history) — pick your own value
+ADMIN_PASSWORD=
+
+# Optional — both default to the real production values if unset
 NEXT_PUBLIC_SITE_URL=
 NEXT_PUBLIC_GITHUB_URL=
 ```
 
+Then apply the SQL migrations in `supabase/migrations/` (in order) via the Supabase SQL Editor —
+see `supabase/migrations/README.md`.
+
 ## Future Improvements
 
-* Multi-regulation support
-* Authentication
-* Report history
-* PDF export
-* Team collaboration
+* Verify the KYC/AML corpus clauses against RBI's current source text (currently flagged unverified — see `/architecture`)
 * More regulatory domains
+* Full multi-user authentication (current `/admin` is a single-owner password gate, not per-user accounts)
+* Team collaboration
 
 ## Author
 

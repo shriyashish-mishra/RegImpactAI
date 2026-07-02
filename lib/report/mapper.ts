@@ -90,6 +90,7 @@ export async function buildReport(assessmentId: string): Promise<ReportMapResult
         clause_ref: c.clause_ref,
         clause_text: c.clause_text,
         source_title: c.source_title,
+        verified: c.verified,
       })),
     recommendations: recommendationRows
       .filter(r => r.finding_id === row.id)

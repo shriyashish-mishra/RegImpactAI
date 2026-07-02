@@ -1,13 +1,15 @@
 /**
  * Prompt builders for /api/synthesize.
  *
- * Scope note: the corpus (lib/corpus.ts) only has clauses for one
- * regulatory area — DLG (Digital Lending Guidelines). The system prompt
- * still asks Claude to consider a few adjacent areas so the Mirror screen's
- * "regulations in scope" section reads like a real first-pass review
- * (showing what was checked and ruled out, not just what matched) — but
- * only DLG can ever produce findings later, since that's the only area
- * with clauses to test against.
+ * Scope note: the corpus (lib/corpus.ts) has clauses for two regulatory
+ * areas — DLG (Digital Lending Guidelines) and KYC_AML. The system prompt
+ * still asks Claude to consider PPI too so the Mirror screen's "regulations
+ * in scope" section reads like a real first-pass review (showing what was
+ * checked and ruled out, not just what matched) — but only DLG and KYC_AML
+ * can ever produce findings later, since those are the only areas with
+ * clauses to test against. KYC_AML's clauses are unverified (see
+ * lib/corpus.ts header) — findings citing them carry that caveat through
+ * to the report.
  */
 
 export function buildSynthesizeSystemPrompt(): string {

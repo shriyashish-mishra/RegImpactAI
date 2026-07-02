@@ -4,6 +4,7 @@
 
 import { buildReport } from '@/lib/report/mapper'
 import ReportView from '@/components/report/ReportView'
+import PrintButton from '@/components/report/PrintButton'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -31,6 +32,9 @@ export default async function ReportPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <div className="print:hidden mx-auto max-w-3xl px-6 pt-6 flex justify-end">
+        <PrintButton />
+      </div>
       <ReportView report={result.report} />
     </div>
   )

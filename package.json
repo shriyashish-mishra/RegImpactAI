@@ -2,6 +2,15 @@
   "name": "regimpact-ai",
   "version": "0.1.0",
   "private": true,
+  "description": "AI-powered regulatory impact assessment for Indian fintech — citation-backed compliance findings from RBI's Digital Lending Guidelines.",
+  "homepage": "https://reg-impact-ai.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shriyashish-mishra/RegImpactAI.git"
+  },
+  "author": "Shriyashish Mishra",
+  "license": "MIT",
+  "keywords": ["nextjs", "typescript", "anthropic", "claude", "supabase", "fintech", "compliance", "rbi", "regtech", "ai"],
   "scripts": {
     "dev": "next dev",
     "build": "next build",

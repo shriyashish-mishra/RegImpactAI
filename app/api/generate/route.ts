@@ -1,10 +1,11 @@
 import { anthropic } from '@ai-sdk/anthropic'
-import { generateText } from 'ai'
+import { streamText, Output } from 'ai'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
-import { getClausesByAreaCode } from '@/lib/corpus'
+import { getClausesByAreaCode, getClauseById } from '@/lib/corpus'
 import { buildGenerateSystemPrompt, buildGenerateUserPrompt } from '@/lib/prompts/generate'
 import { encodeStreamLine } from '@/lib/stream'
+import { requireEnv } from '@/lib/env'
 import type { ConfirmedModel, Question, Finding, GenerateStreamEvent } from '@/lib/types'
 
 export const maxDuration = 60
@@ -25,37 +26,32 @@ const RequestSchema = z.object({
   })),
 })
 
-const FindingsModelSchema = z.object({
-  findings: z.array(z.object({
-    area_code: z.string().min(1),
-    area_name: z.string().min(1),
-    title: z.string().min(1),
-    what_found: z.string().min(1),
-    why_matters: z.string().min(1),
-    severity: z.enum(['high', 'medium', 'low']),
-    confidence: z.enum(['high', 'moderate', 'low']),
-    driver_clarity: z.enum(['high', 'moderate', 'low']),
-    driver_understanding: z.enum(['high', 'moderate', 'low']),
-    impacts: z.array(z.object({
-      lens: z.enum(['product', 'ui', 'engineering', 'business']),
-      description: z.string().min(1),
-    })).min(1),
-    citations: z.array(z.object({
-      corpus_clause_id: z.string().min(1),
-      clause_ref: z.string().min(1),
-      clause_text: z.string().min(1),
-      source_title: z.string().min(1),
-    })).min(1),
-    recommendations: z.array(z.string().min(1)).min(1),
-  })),
+/** One array element — streamed and persisted as soon as each finding completes. */
+const FindingSchema = z.object({
+  area_code: z.string().min(1),
+  area_name: z.string().min(1),
+  title: z.string().min(1),
+  what_found: z.string().min(1),
+  why_matters: z.string().min(1),
+  severity: z.enum(['high', 'medium', 'low']),
+  confidence: z.enum(['high', 'moderate', 'low']),
+  driver_clarity: z.enum(['high', 'moderate', 'low']),
+  driver_understanding: z.enum(['high', 'moderate', 'low']),
+  impacts: z.array(z.object({
+    lens: z.enum(['product', 'ui', 'engineering', 'business']),
+    description: z.string().min(1),
+  })).min(1),
+  citations: z.array(z.object({
+    corpus_clause_id: z.string().min(1),
+    clause_ref: z.string().min(1),
+    clause_text: z.string().min(1),
+    source_title: z.string().min(1),
+  })).min(1),
+  recommendations: z.array(z.string().min(1)).min(1),
 })
 
-function stripCodeFence(text: string): string {
-  return text.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '')
-}
-
-/** Only DLG has clauses in the corpus — the only area worth calling Claude for. */
-const ASSESSABLE_AREA_CODE = 'DLG'
+/** Only these areas have clauses in the corpus — the only ones worth calling Claude for. */
+const ASSESSABLE_AREA_CODES = ['DLG', 'KYC_AML']
 
 export async function POST(req: Request) {
   let body: unknown
@@ -73,8 +69,22 @@ export async function POST(req: Request) {
   const questions = parsedRequest.data.questions as Question[]
   const assessmentId = confirmedModel.assessment_id
 
-  const clauses = getClausesByAreaCode(ASSESSABLE_AREA_CODE)
-  const supabase = createServerClient()
+  try {
+    requireEnv('ANTHROPIC_API_KEY')
+  } catch (err) {
+    console.error('[generate]', err)
+    return Response.json({ error: 'Server misconfigured: missing ANTHROPIC_API_KEY' }, { status: 500 })
+  }
+
+  const clauses = ASSESSABLE_AREA_CODES.flatMap(getClausesByAreaCode)
+
+  let supabase: ReturnType<typeof createServerClient>
+  try {
+    supabase = createServerClient()
+  } catch (err) {
+    console.error('[generate]', err)
+    return Response.json({ error: 'Server misconfigured: missing Supabase environment variables' }, { status: 500 })
+  }
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -84,36 +94,19 @@ export async function POST(req: Request) {
       }
 
       try {
-        emit({ type: 'step', text: `Testing ${ASSESSABLE_AREA_CODE} clauses against ${confirmedModel.product_name}…` })
+        emit({ type: 'step', text: `Testing ${ASSESSABLE_AREA_CODES.join(' + ')} clauses against ${confirmedModel.product_name}…` })
 
-        const result = await generateText({
+        const result = streamText({
           model: anthropic('claude-sonnet-4-6'),
           system: buildGenerateSystemPrompt(),
           prompt: buildGenerateUserPrompt(confirmedModel, questions, clauses),
           temperature: 0.4,
+          output: Output.array({ element: FindingSchema }),
         })
 
-        let parsed: unknown
-        try {
-          parsed = JSON.parse(stripCodeFence(result.text))
-        } catch {
-          console.error('[generate] Failed to parse model JSON:', result.text)
-          emit({ type: 'error', message: 'Failed to parse assessment response' })
-          controller.close()
-          return
-        }
-
-        const validated = FindingsModelSchema.safeParse(parsed)
-        if (!validated.success) {
-          console.error('[generate] Model output failed validation:', validated.error.issues)
-          emit({ type: 'error', message: 'Model returned an unexpected shape' })
-          controller.close()
-          return
-        }
-
-        emit({ type: 'step', text: `Found ${validated.data.findings.length} finding(s). Saving assessment…` })
-
-        for (const f of validated.data.findings) {
+        let count = 0
+        for await (const f of result.elementStream) {
+          count++
           const { data: findingRow, error: findingErr } = await supabase
             .from('findings')
             .insert({
@@ -138,20 +131,29 @@ export async function POST(req: Request) {
 
           const findingId = findingRow.id as string
 
+          // verified is resolved from the trusted corpus, never taken from the
+          // model's own output — a hallucinated or paraphrased citation must
+          // never inherit a source clause's verified: true.
+          const citations = f.citations.map(c => ({
+            ...c,
+            verified: getClauseById(c.corpus_clause_id)?.verified ?? false,
+          }))
+
           if (f.impacts.length > 0) {
             await supabase.from('finding_impacts').insert(
               f.impacts.map(imp => ({ finding_id: findingId, lens: imp.lens, description: imp.description }))
             )
           }
 
-          if (f.citations.length > 0) {
+          if (citations.length > 0) {
             await supabase.from('finding_citations').insert(
-              f.citations.map(c => ({
+              citations.map(c => ({
                 finding_id: findingId,
                 corpus_clause_id: c.corpus_clause_id,
                 clause_ref: c.clause_ref,
                 clause_text: c.clause_text,
                 source_title: c.source_title,
+                verified: c.verified,
               }))
             )
           }
@@ -175,13 +177,13 @@ export async function POST(req: Request) {
             driver_clarity: f.driver_clarity,
             driver_understanding: f.driver_understanding,
             impacts: f.impacts,
-            citations: f.citations,
+            citations,
             recommendations: f.recommendations,
           }
           emit({ type: 'finding', finding })
         }
 
-        emit({ type: 'step', text: 'Assessment complete.' })
+        emit({ type: 'step', text: `Assessment complete — ${count} finding${count === 1 ? '' : 's'}.` })
         emit({ type: 'done', assessment_id: assessmentId })
       } catch (err) {
         console.error('[generate] Unexpected error:', err)
