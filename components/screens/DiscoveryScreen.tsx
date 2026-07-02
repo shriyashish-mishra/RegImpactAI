@@ -1,47 +1,51 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button }   from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import type { ConfirmedModel, Question } from '@/lib/types'
+import type { ConfirmedModel, Question, QuestionsResponse } from '@/lib/types'
 
 type Props = {
   confirmedModel: ConfirmedModel
   onComplete:     (answeredQuestions: Question[]) => void
 }
 
-function buildStubQuestions(): Question[] {
-  return [
-    {
-      id:        crypto.randomUUID(),
-      seq:       1,
-      prompt:    'How are loan funds disbursed to your customers?',
-      rationale: 'The Digital Lending Guidelines require disbursal directly to the borrower\'s bank account. Pass-through or nodal arrangements are a specific area of scrutiny — this answer determines whether DLG §5(i) applies to your product.',
-      answer:    null,
-    },
-    {
-      id:        crypto.randomUUID(),
-      seq:       2,
-      prompt:    'Is a Key Fact Statement (KFS) shown to the borrower before they accept a loan offer?',
-      rationale: 'DLG Para 6 requires a standardised KFS — including APR, all-in cost, and grievance details — before contract execution. I need to know whether your Loan offer screen currently includes this.',
-      answer:    null,
-    },
-    {
-      id:        crypto.randomUUID(),
-      seq:       3,
-      prompt:    'Do you offer a cooling-off period after loan acceptance?',
-      rationale: 'DLG Para 6 mandates a minimum 3-day cooling-off period for loans of 7 days or more. This determines whether your repayment flow needs a penalty-free withdrawal mechanism.',
-      answer:    null,
-    },
-  ]
-}
-
 export default function DiscoveryScreen({ confirmedModel, onComplete }: Props) {
-  const [questions, setQuestions] = useState<Question[]>(buildStubQuestions)
+  const [questions, setQuestions] = useState<Question[]>([])
+  const [fetching, setFetching]   = useState(true)
   const [loading, setLoading]     = useState(false)
+  const [error, setError]         = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function fetchQuestions() {
+      setFetching(true)
+      setError(null)
+      try {
+        const res = await fetch('/api/questions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ confirmedModel }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data?.error ?? 'Failed to generate questions')
+        if (!cancelled) setQuestions((data as QuestionsResponse).questions)
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+        }
+      } finally {
+        if (!cancelled) setFetching(false)
+      }
+    }
+
+    fetchQuestions()
+    return () => { cancelled = true }
+  }, [confirmedModel])
 
   const activeIndex = questions.findIndex(q => q.answer === null)
-  const allAnswered = activeIndex === -1
+  const allAnswered = questions.length > 0 && activeIndex === -1
   const remaining   = questions.filter(q => q.answer === null).length
 
   function handleAnswer(id: string, answer: string) {
@@ -52,6 +56,32 @@ export default function DiscoveryScreen({ confirmedModel, onComplete }: Props) {
     setLoading(true)
     await new Promise(r => setTimeout(r, 400))
     onComplete(questions)
+  }
+
+  if (fetching) {
+    return (
+      <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
+            A few questions about {confirmedModel.product_name}
+          </h1>
+          <p className="text-slate-500 text-sm">Preparing targeted questions…</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col gap-6">
+        <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
+          A few questions about {confirmedModel.product_name}
+        </h1>
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-4 py-3">
+          {error}
+        </p>
+      </div>
+    )
   }
 
   return (

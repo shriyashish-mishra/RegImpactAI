@@ -4,32 +4,10 @@ import { useState } from 'react'
 import { Button }        from '@/components/ui/button'
 import { Textarea }      from '@/components/ui/textarea'
 import ScopeBoundaryNote from '@/components/primitives/ScopeBoundaryNote'
-import type { DraftModel } from '@/lib/types'
+import type { DraftModel, SynthesisResponse } from '@/lib/types'
 
 type Props = {
   onComplete: (assessmentId: string, model: DraftModel) => void
-}
-
-const STUB_MODEL: DraftModel = {
-  product_name: 'Acme Lending',
-  narration: [
-    'Reading product description…',
-    'Identifying regulated activities…',
-    'Mapping to RBI regulatory areas…',
-  ],
-  elements: [
-    { element_type: 'activity', label: 'Digital lending — personal loans', status: 'inferred', is_negative: false, confidence: 'high' },
-    { element_type: 'activity', label: 'BNPL / deferred payment',          status: 'inferred', is_negative: false, confidence: 'moderate' },
-    { element_type: 'screen',   label: 'Loan offer screen',                status: 'inferred', is_negative: false, confidence: 'moderate' },
-    { element_type: 'screen',   label: 'KYC onboarding',                   status: 'inferred', is_negative: false, confidence: 'high' },
-    { element_type: 'screen',   label: 'Repayment & collections',          status: 'inferred', is_negative: false, confidence: 'moderate' },
-    { element_type: 'activity', label: 'UPI payments',                     status: 'inferred', is_negative: true,  confidence: 'high' },
-  ],
-  triggered_areas: [
-    { area_code: 'DLG',     area_name: 'Digital Lending Guidelines',  status: 'triggered',     reason: 'Product offers direct digital loans to borrowers.' },
-    { area_code: 'KYC_AML', area_name: 'KYC Master Direction / AML',  status: 'triggered',     reason: 'Onboarding requires customer due diligence.' },
-    { area_code: 'PPI',     area_name: 'Prepaid Payment Instruments', status: 'not_triggered', reason: 'No wallet or PPI product detected.' },
-  ],
 }
 
 export default function SeedScreen({ onComplete }: Props) {
@@ -44,12 +22,26 @@ export default function SeedScreen({ onComplete }: Props) {
     setError(null)
     setLoading(true)
 
-    // Stub — replaced by real /api/synthesize call in Milestone 3
-    await new Promise(r => setTimeout(r, 1200))
-    const stubId = crypto.randomUUID()
-    onComplete(stubId, STUB_MODEL)
+    try {
+      const res = await fetch('/api/synthesize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: description.trim() }),
+      })
 
-    setLoading(false)
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data?.error ?? 'Failed to analyse product description')
+      }
+
+      const { assessment_id, model } = data as SynthesisResponse
+      onComplete(assessment_id, model)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
