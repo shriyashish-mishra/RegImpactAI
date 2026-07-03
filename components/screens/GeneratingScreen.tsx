@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import NarratedProgress from '@/components/primitives/NarratedProgress'
 import FindingCard from '@/components/report/FindingCard'
 import { readLines, parseStreamLine } from '@/lib/stream'
+import { sortByPriority } from '@/lib/report/executiveSummary'
 import type { ConfirmedModel, Question, Finding } from '@/lib/types'
 
 type Props = {
@@ -100,13 +101,43 @@ export default function GeneratingScreen({ confirmedModel, questions, assessment
         </div>
       )}
 
-      {state.findings.length > 0 && (
+      {state.phase !== 'complete' && state.findings.length > 0 && (
         <div className="flex flex-col gap-4">
           {state.findings.map(finding => (
             <FindingCard key={finding.id} finding={finding} variant="compact" />
           ))}
         </div>
       )}
+
+      {/* Once streaming finishes, regroup and sort exactly like the final
+          report (see ReportView) instead of leaving findings in arrival
+          order — arrival order is honest signal while still streaming, but
+          once nothing more is moving it should read the same as the report
+          the user is about to open. */}
+      {state.phase === 'complete' && (() => {
+        const flagged = sortByPriority(state.findings.filter(f => f.classification !== 'compliant'))
+        const compliant = state.findings.filter(f => f.classification === 'compliant')
+        return (
+          <>
+            {flagged.length > 0 && (
+              <div className="flex flex-col gap-4">
+                <h2 className="text-sm font-semibold text-slate-900">Findings requiring attention</h2>
+                {flagged.map(finding => (
+                  <FindingCard key={finding.id} finding={finding} variant="compact" />
+                ))}
+              </div>
+            )}
+            {compliant.length > 0 && (
+              <div className="flex flex-col gap-4">
+                <h2 className="text-sm font-semibold text-slate-900">Confirmed compliant</h2>
+                {compliant.map(finding => (
+                  <FindingCard key={finding.id} finding={finding} variant="compact" />
+                ))}
+              </div>
+            )}
+          </>
+        )
+      })()}
 
       {state.phase === 'complete' && (
         <div className="flex justify-end pt-2 border-t border-slate-100">

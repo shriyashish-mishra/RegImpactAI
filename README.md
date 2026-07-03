@@ -18,9 +18,11 @@ This project focuses on trust. Every compliance finding is backed by verified re
 
 ## Features
 
-* AI-powered regulatory assessment across two regulatory areas (DLG, KYC/AML)
+* AI-powered regulatory assessment across two regulatory areas (DLG, KYC/AML) — every applicable clause is classified as compliant, non-compliant, a potential gap, or requiring more information, not just flagged when there's a problem
 * Dynamic clarification questions
 * Citation-backed compliance findings, with unverified citations explicitly flagged
+* Executive summary with compliance score, overall risk, launch recommendation, and estimated remediation effort
+* Evidence-to-citation traceability on every finding, with a built-in hallucination guard that flags high-confidence claims citing no supporting evidence
 * Consultant-style report generation, streamed live as findings are produced
 * Owner report history (password-gated, at `/admin`)
 * PDF export (browser print, on every report)
@@ -43,9 +45,10 @@ This project focuses on trust. Every compliance finding is backed by verified re
 1. Parse product description
 2. Infer product characteristics
 3. Generate clarification questions
-4. Evaluate applicable regulations
+4. Classify every applicable clause as compliant, non-compliant, a potential gap, or requiring more information
 5. Verify citations
-6. Generate final compliance report
+6. Compute the executive summary — compliance score, overall risk, launch recommendation
+7. Generate final compliance report
 
 ## Project Structure
 

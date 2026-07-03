@@ -103,9 +103,10 @@ export default function CaseStudyPage() {
             Every finding is required to cite a real clause from the regulatory corpus — the
             clause text is copied verbatim, not paraphrased, and joined to the source clause by
             id rather than free text, so the citation can always be traced back to what it
-            actually references. Findings are only produced where there&apos;s a real, specific
-            gap; the model is explicitly instructed not to invent findings for clauses a product
-            clearly satisfies.
+            actually references. The model classifies every clause it&apos;s given as compliant,
+            non-compliant, a potential gap, or requiring more information — not just the ones
+            that look like problems — so a clean result reads as &ldquo;checked and confirmed,&rdquo;
+            not silence, and an aggregate compliance score is possible at all.
           </p>
         </section>
 

@@ -22,7 +22,8 @@ const PIPELINE = [
 
 const TABLES = [
   { name: 'assessments',        detail: 'One row per submitted product description: id, product_name, description, created_at.' },
-  { name: 'findings',           detail: 'One row per finding: area, title, what/why, severity, confidence — foreign-keyed to assessments.' },
+  { name: 'questions',          detail: 'Discovery questions and answers per assessment, persisted as they\'re answered so a mid-flow refresh doesn\'t lose progress.' },
+  { name: 'findings',           detail: 'One row per clause tested: area, title, what/why, severity, classification (compliant / non-compliant / potential gap / info required), confidence, confidence reasoning, and the evidence found/missing behind it — foreign-keyed to assessments.' },
   { name: 'finding_impacts',    detail: 'Product / UI / engineering / business impact statements, one-to-many per finding.' },
   { name: 'finding_citations',  detail: 'The regulatory clause(s) backing a finding — clause text is denormalised for display but joined to the source corpus clause by id.' },
   { name: 'recommendations',    detail: 'Ordered, actionable recommendations per finding.' },
