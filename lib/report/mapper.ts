@@ -5,12 +5,26 @@ import type {
   FindingImpactRow,
   FindingCitationRow,
   RecommendationRow,
+  QuestionRow,
   Finding,
 } from '@/lib/types'
 
+// Discovery Impact — how much the adaptive questioning step actually
+// resolved. questionsAsked/Answered come straight from the questions table;
+// remainingAssumptions is the count of findings still classified
+// info_required even after those answers were factored in, i.e. things
+// discovery could not resolve because the product description and
+// discovery answers together still don't cover them.
+export type DiscoveryImpact = {
+  questionsAsked:        number
+  questionsAnswered:     number
+  remainingAssumptions:  number
+}
+
 export type ReportData = {
-  assessment: AssessmentRow
-  findings:   Finding[]
+  assessment:      AssessmentRow
+  findings:        Finding[]
+  discoveryImpact: DiscoveryImpact
 }
 
 export type ReportMapResult =
@@ -41,14 +55,25 @@ export async function buildReport(assessmentId: string): Promise<ReportMapResult
     return { ok: false, reason: 'not_found' }
   }
 
-  const { data: findingRows, error: findingsError } = await supabase
-    .from('findings')
-    .select('*')
-    .eq('assessment_id', assessmentId)
-    .order('created_at', { ascending: true })
+  const [findingsRes, questionsRes] = await Promise.all([
+    supabase.from('findings').select('*').eq('assessment_id', assessmentId).order('created_at', { ascending: true }),
+    supabase.from('questions').select('*').eq('assessment_id', assessmentId),
+  ])
 
-  if (findingsError || !findingRows) {
-    return { ok: true, report: { assessment: assessment as AssessmentRow, findings: [] } }
+  const findingRows = findingsRes.data
+  const questionRows = (questionsRes.data ?? []) as QuestionRow[]
+  const questionsAsked = questionRows.length
+  const questionsAnswered = questionRows.filter(q => q.answer !== null).length
+
+  if (findingsRes.error || !findingRows) {
+    return {
+      ok: true,
+      report: {
+        assessment: assessment as AssessmentRow,
+        findings: [],
+        discoveryImpact: { questionsAsked, questionsAnswered, remainingAssumptions: 0 },
+      },
+    }
   }
 
   const findingIds = (findingRows as FindingRow[]).map(f => f.id)
@@ -102,5 +127,14 @@ export async function buildReport(assessmentId: string): Promise<ReportMapResult
       .map(r => r.text),
   }))
 
-  return { ok: true, report: { assessment: assessment as AssessmentRow, findings } }
+  const remainingAssumptions = findings.filter(f => f.classification === 'info_required').length
+
+  return {
+    ok: true,
+    report: {
+      assessment: assessment as AssessmentRow,
+      findings,
+      discoveryImpact: { questionsAsked, questionsAnswered, remainingAssumptions },
+    },
+  }
 }

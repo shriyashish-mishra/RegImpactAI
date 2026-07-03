@@ -4,19 +4,18 @@
 
 import type { ReportData } from '@/lib/report/mapper'
 import FindingCard from '@/components/report/FindingCard'
+import ExecutiveSummary from '@/components/report/ExecutiveSummary'
+import { sortByPriority } from '@/lib/report/executiveSummary'
 
 type Props = {
   report: ReportData
 }
 
 export default function ReportView({ report }: Props) {
-  const { assessment, findings } = report
+  const { assessment, findings, discoveryImpact } = report
 
-  const compliant     = findings.filter(f => f.classification === 'compliant')
-  const nonCompliant  = findings.filter(f => f.classification === 'non_compliant')
-  const potentialGap  = findings.filter(f => f.classification === 'potential_gap')
-  const infoRequired  = findings.filter(f => f.classification === 'info_required')
-  const flagged       = [...nonCompliant, ...potentialGap, ...infoRequired]
+  const compliant = findings.filter(f => f.classification === 'compliant')
+  const flagged = sortByPriority(findings.filter(f => f.classification !== 'compliant'))
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16 flex flex-col gap-10">
@@ -34,22 +33,13 @@ export default function ReportView({ report }: Props) {
         </p>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold text-slate-900">Summary</h2>
-        {findings.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            No findings were identified for the applicable regulatory areas.
-          </p>
-        ) : (
-          <div className="flex items-center gap-4 text-sm flex-wrap">
-            <span className="text-slate-600">{findings.length} clause{findings.length === 1 ? '' : 's'} assessed</span>
-            {compliant.length > 0 && <span className="text-emerald-700">✅ {compliant.length} compliant</span>}
-            {nonCompliant.length > 0 && <span className="text-red-600">❌ {nonCompliant.length} non-compliant</span>}
-            {potentialGap.length > 0 && <span className="text-amber-600">⚠️ {potentialGap.length} potential gap{potentialGap.length === 1 ? '' : 's'}</span>}
-            {infoRequired.length > 0 && <span className="text-slate-500">❓ {infoRequired.length} info required</span>}
-          </div>
-        )}
-      </div>
+      {findings.length === 0 ? (
+        <p className="text-sm text-slate-500">
+          No findings were identified for the applicable regulatory areas.
+        </p>
+      ) : (
+        <ExecutiveSummary findings={findings} discoveryImpact={discoveryImpact} />
+      )}
 
       {flagged.length > 0 && (
         <div className="flex flex-col gap-4">

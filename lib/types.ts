@@ -252,6 +252,15 @@ export type RecommendationRow = {
   priority:   number
 }
 
+export type QuestionRow = {
+  id:            string
+  assessment_id: string
+  seq:           number
+  prompt:        string
+  rationale:     string
+  answer:        string | null
+}
+
 export type FindingCitationRow = {
   id:               string
   finding_id:       string

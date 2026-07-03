@@ -7,6 +7,7 @@
 import type { Finding, FindingClassification } from '@/lib/types'
 import ConfidenceBadge from '@/components/primitives/ConfidenceBadge'
 import CitationBlock   from '@/components/primitives/CitationBlock'
+import { priorityTier, type PriorityTier } from '@/lib/report/executiveSummary'
 
 type Props = {
   finding: Finding
@@ -35,9 +36,17 @@ const CLASSIFICATION_STYLE: Record<FindingClassification, {
   info_required: { border: 'border-slate-200 bg-slate-50',     dot: 'bg-slate-400',   icon: '❓', label: 'Info Required', labelColor: 'text-slate-600' },
 }
 
+const PRIORITY_STYLE: Record<PriorityTier, string> = {
+  critical: 'bg-red-100 text-red-800 border-red-200',
+  high:     'bg-orange-100 text-orange-800 border-orange-200',
+  medium:   'bg-amber-100 text-amber-800 border-amber-200',
+  low:      'bg-slate-100 text-slate-600 border-slate-200',
+}
+
 export default function FindingCard({ finding, variant = 'full' }: Props) {
   const style = CLASSIFICATION_STYLE[finding.classification]
   const compact = variant === 'compact'
+  const tier = priorityTier(finding)
 
   const citations = compact ? finding.citations.slice(0, 1) : finding.citations
   const recommendations = compact ? finding.recommendations.slice(0, 1) : finding.recommendations
@@ -52,6 +61,11 @@ export default function FindingCard({ finding, variant = 'full' }: Props) {
               <span className={`text-xs font-semibold uppercase tracking-wide ${style.labelColor}`}>
                 {style.icon} {style.label}
               </span>
+              {!compact && finding.classification !== 'compliant' && (
+                <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded border ${PRIORITY_STYLE[tier]}`}>
+                  {tier}
+                </span>
+              )}
               <span className="text-xs text-slate-400">{finding.area_name}</span>
             </div>
             <h3 className="text-sm font-semibold text-slate-900 leading-snug">{finding.title}</h3>

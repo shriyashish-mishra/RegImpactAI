@@ -207,4 +207,13 @@ export const SAMPLE_REPORT: ReportData = {
     created_at: '2026-06-18T09:32:00.000Z',
   },
   findings,
+  // 5 discovery questions were asked and answered in this sample run; one
+  // finding (the cooling-off period) still came back info_required even
+  // after those answers, since neither the description nor the discovery
+  // answers addressed it.
+  discoveryImpact: {
+    questionsAsked: 5,
+    questionsAnswered: 5,
+    remainingAssumptions: findings.filter(f => f.classification === 'info_required').length,
+  },
 }
