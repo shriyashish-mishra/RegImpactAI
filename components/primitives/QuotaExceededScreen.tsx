@@ -33,33 +33,33 @@ export default function QuotaExceededScreen({ resetAt }: Props) {
   }, [resetAt])
 
   return (
-    <div className="flex flex-col gap-6 px-6 py-10 bg-white border border-slate-200 rounded-xl items-center text-center">
+    <div className="flex flex-col gap-6 px-6 py-10 bg-surface border border-border rounded-xl items-center text-center">
       <div className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold text-slate-900">
+        <h2 className="text-lg font-semibold text-foreground">
           Today&apos;s live AI assessment capacity has been fully utilized
         </h2>
-        <p className="text-sm text-slate-500 max-w-md leading-relaxed">
+        <p className="text-sm text-muted max-w-md leading-relaxed">
           To keep RegImpact free for everyone, live assessments are temporarily paused.
         </p>
       </div>
 
       <div className="flex flex-col gap-1 items-center">
-        <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Next refresh</span>
-        <span className="text-2xl font-mono font-semibold text-slate-900 tabular-nums">
+        <span className="text-xs font-medium text-subtle uppercase tracking-wide">Next refresh</span>
+        <span className="text-2xl font-mono font-semibold text-accent tabular-nums">
           {formatRemaining(remaining)}
         </span>
       </div>
 
-      <div className="flex flex-col gap-2 pt-4 border-t border-slate-100 w-full max-w-xs">
-        <span className="text-xs text-slate-500">In the meantime you can explore</span>
+      <div className="flex flex-col gap-2 pt-4 border-t border-border w-full max-w-xs">
+        <span className="text-xs text-subtle">In the meantime you can explore</span>
         <div className="flex flex-col gap-2">
-          <Link href="/demo/sample" className="text-sm font-medium text-indigo-600 hover:text-indigo-800 underline underline-offset-2">
+          <Link href="/demo/sample" className="text-sm font-medium text-accent hover:underline underline-offset-2">
             Interactive Sample Report →
           </Link>
-          <Link href="/architecture" className="text-sm font-medium text-indigo-600 hover:text-indigo-800 underline underline-offset-2">
+          <Link href="/architecture" className="text-sm font-medium text-accent hover:underline underline-offset-2">
             Architecture →
           </Link>
-          <Link href="/case-study" className="text-sm font-medium text-indigo-600 hover:text-indigo-800 underline underline-offset-2">
+          <Link href="/case-study" className="text-sm font-medium text-accent hover:underline underline-offset-2">
             Product Case Study →
           </Link>
         </div>

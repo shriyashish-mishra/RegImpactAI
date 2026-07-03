@@ -56,12 +56,12 @@ export default function SeedScreen({ onComplete }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8 p-6 bg-surface border border-border rounded-xl">
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
+        <h1 className="text-2xl font-semibold text-foreground tracking-tight">
           Describe your product
         </h1>
-        <p className="text-slate-500 text-sm leading-relaxed">
+        <p className="text-muted text-sm leading-relaxed">
           Tell me what your fintech product does. I&apos;ll identify which RBI regulations
           apply and which parts of your product they affect.
         </p>
@@ -80,7 +80,7 @@ export default function SeedScreen({ onComplete }: Props) {
           className="resize-none"
           disabled={loading}
         />
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-subtle">
           {description.trim().length < 30
             ? `${30 - description.trim().length} more characters to continue`
             : 'Ready to analyse'}
@@ -88,14 +88,14 @@ export default function SeedScreen({ onComplete }: Props) {
       </div>
 
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-4 py-3">
+        <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-md px-4 py-3">
           {error}
         </p>
       )}
 
       <div className="flex items-center justify-between">
         <ScopeBoundaryNote />
-        <Button onClick={handleSubmit} disabled={!canSubmit}>
+        <Button variant="accent" onClick={handleSubmit} disabled={!canSubmit}>
           {loading ? 'Analysing…' : 'Analyse product →'}
         </Button>
       </div>

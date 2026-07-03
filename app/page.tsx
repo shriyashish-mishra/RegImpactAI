@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import SiteHeader       from '@/components/shell/SiteHeader'
 import StepIndicator    from '@/components/shell/StepIndicator'
+import LandingStory     from '@/components/screens/LandingStory'
 import SeedScreen       from '@/components/screens/SeedScreen'
 import MirrorScreen     from '@/components/screens/MirrorScreen'
 import DiscoveryScreen  from '@/components/screens/DiscoveryScreen'
@@ -57,41 +58,49 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background">
       <SiteHeader current="live" />
-      <div className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-3xl px-6 py-4">
-          <StepIndicator currentStep={STEP_NUMBER[step]} />
-        </div>
-      </div>
 
-      <main className="mx-auto max-w-3xl px-6 py-10">
-        {step === 'seed' && (
-          <SeedScreen onComplete={handleSynthesisComplete} />
-        )}
-        {step === 'mirror' && draftModel && assessmentId && (
-          <MirrorScreen
-            draftModel={draftModel}
-            assessmentId={assessmentId}
-            onConfirm={handleModelConfirmed}
-            onStartOver={handleStartOver}
-          />
-        )}
-        {step === 'discovery' && confirmedModel && (
-          <DiscoveryScreen
-            confirmedModel={confirmedModel}
-            onComplete={handleDiscoveryComplete}
-          />
-        )}
-        {step === 'generating' && confirmedModel && assessmentId && (
-          <GeneratingScreen
-            confirmedModel={confirmedModel}
-            questions={questions}
-            assessmentId={assessmentId}
-            onComplete={handleGenerationComplete}
-          />
-        )}
-      </main>
+      {step === 'seed' ? (
+        <main className="mx-auto max-w-3xl px-6">
+          <LandingStory />
+          <div className="pb-10">
+            <SeedScreen onComplete={handleSynthesisComplete} />
+          </div>
+        </main>
+      ) : (
+        <>
+          <div className="border-b border-border bg-surface">
+            <div className="mx-auto max-w-3xl px-6 py-4">
+              <StepIndicator currentStep={STEP_NUMBER[step]} />
+            </div>
+          </div>
+          <main className="mx-auto max-w-3xl px-6 py-10">
+            {step === 'mirror' && draftModel && assessmentId && (
+              <MirrorScreen
+                draftModel={draftModel}
+                assessmentId={assessmentId}
+                onConfirm={handleModelConfirmed}
+                onStartOver={handleStartOver}
+              />
+            )}
+            {step === 'discovery' && confirmedModel && (
+              <DiscoveryScreen
+                confirmedModel={confirmedModel}
+                onComplete={handleDiscoveryComplete}
+              />
+            )}
+            {step === 'generating' && confirmedModel && assessmentId && (
+              <GeneratingScreen
+                confirmedModel={confirmedModel}
+                questions={questions}
+                assessmentId={assessmentId}
+                onComplete={handleGenerationComplete}
+              />
+            )}
+          </main>
+        </>
+      )}
     </div>
   )
 }
