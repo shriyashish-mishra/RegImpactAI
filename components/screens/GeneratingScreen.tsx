@@ -85,12 +85,12 @@ export default function GeneratingScreen({ confirmedModel, questions, assessment
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
+        <h1 className="text-2xl font-semibold text-foreground tracking-tight">
           {state.phase === 'complete'
             ? `Assessment complete — ${state.findings.length} clause${state.findings.length === 1 ? '' : 's'} assessed, ${flaggedCount} flagged`
             : 'Assessing your product…'}
         </h1>
-        <p className="text-slate-500 text-sm">
+        <p className="text-muted text-sm">
           {state.phase === 'complete'
             ? 'Review findings below, then open the full report.'
             : 'Testing applicable RBI regulations against your confirmed product model.'}
@@ -103,9 +103,9 @@ export default function GeneratingScreen({ confirmedModel, questions, assessment
       />
 
       {state.phase === 'error' && (
-        <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-700">{state.message}</p>
-          <button onClick={runGeneration} className="mt-2 text-xs text-red-600 underline underline-offset-2">
+        <div className="px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+          <p className="text-sm text-red-300">{state.message}</p>
+          <button onClick={runGeneration} className="mt-2 text-xs text-red-300 underline underline-offset-2">
             Retry
           </button>
         </div>
@@ -131,7 +131,7 @@ export default function GeneratingScreen({ confirmedModel, questions, assessment
           <>
             {flagged.length > 0 && (
               <div className="flex flex-col gap-4">
-                <h2 className="text-sm font-semibold text-slate-900">Findings requiring attention</h2>
+                <h2 className="text-sm font-semibold text-foreground">Findings requiring attention</h2>
                 {flagged.map(finding => (
                   <FindingCard key={finding.id} finding={finding} variant="compact" />
                 ))}
@@ -139,7 +139,7 @@ export default function GeneratingScreen({ confirmedModel, questions, assessment
             )}
             {compliant.length > 0 && (
               <div className="flex flex-col gap-4">
-                <h2 className="text-sm font-semibold text-slate-900">Confirmed compliant</h2>
+                <h2 className="text-sm font-semibold text-foreground">Confirmed compliant</h2>
                 {compliant.map(finding => (
                   <FindingCard key={finding.id} finding={finding} variant="compact" />
                 ))}
@@ -150,10 +150,10 @@ export default function GeneratingScreen({ confirmedModel, questions, assessment
       })()}
 
       {state.phase === 'complete' && (
-        <div className="flex justify-end pt-2 border-t border-slate-100">
+        <div className="flex justify-end pt-2 border-t border-border">
           <button
             onClick={onComplete}
-            className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors underline underline-offset-2"
+            className="text-sm font-medium text-accent hover:underline transition-colors underline-offset-2"
           >
             View full report →
           </button>

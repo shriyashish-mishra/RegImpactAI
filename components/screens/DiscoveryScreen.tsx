@@ -81,10 +81,10 @@ export default function DiscoveryScreen({ confirmedModel, onComplete }: Props) {
     return (
       <div className="flex flex-col gap-8">
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-semibold text-foreground tracking-tight">
             A few questions about {confirmedModel.product_name}
           </h1>
-          <p className="text-slate-500 text-sm">Preparing targeted questions…</p>
+          <p className="text-muted text-sm">Preparing targeted questions…</p>
         </div>
       </div>
     )
@@ -93,10 +93,10 @@ export default function DiscoveryScreen({ confirmedModel, onComplete }: Props) {
   if (error) {
     return (
       <div className="flex flex-col gap-6">
-        <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
+        <h1 className="text-2xl font-semibold text-foreground tracking-tight">
           A few questions about {confirmedModel.product_name}
         </h1>
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-4 py-3">
+        <p className="text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-md px-4 py-3">
           {error}
         </p>
       </div>
@@ -106,10 +106,10 @@ export default function DiscoveryScreen({ confirmedModel, onComplete }: Props) {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
+        <h1 className="text-2xl font-semibold text-foreground tracking-tight">
           A few questions about {confirmedModel.product_name}
         </h1>
-        <p className="text-slate-500 text-sm">
+        <p className="text-muted text-sm">
           {allAnswered
             ? 'All questions answered. Ready to assess.'
             : `${remaining} question${remaining === 1 ? '' : 's'} remaining.`}
@@ -124,27 +124,27 @@ export default function DiscoveryScreen({ confirmedModel, onComplete }: Props) {
 
           return (
             <div key={q.id} className={[
-              'flex flex-col gap-4 border rounded-xl px-5 py-5 transition-all',
-              isActive   ? 'border-indigo-300 bg-white shadow-sm'       : '',
-              isAnswered ? 'border-slate-200 bg-slate-50 opacity-80'    : '',
-              isUpcoming ? 'border-slate-100 bg-slate-50/50 opacity-50' : '',
+              'flex flex-col gap-4 border rounded-xl px-5 py-5 transition-all duration-200',
+              isActive   ? 'border-accent bg-surface shadow-[0_0_24px_-8px_var(--accent)]' : '',
+              isAnswered ? 'border-border bg-surface opacity-80'                           : '',
+              isUpcoming ? 'border-border/50 bg-surface/50 opacity-50'                     : '',
             ].join(' ')}>
 
               <div className="flex items-start gap-3">
                 <span className={[
-                  'text-xs font-semibold w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5',
-                  isActive   ? 'bg-indigo-600 text-white'   : '',
-                  isAnswered ? 'bg-slate-800 text-white'     : '',
-                  isUpcoming ? 'bg-slate-200 text-slate-500' : '',
+                  'text-xs font-semibold font-mono w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5',
+                  isActive   ? 'bg-accent text-zinc-950'                    : '',
+                  isAnswered ? 'bg-surface-raised text-foreground border border-border' : '',
+                  isUpcoming ? 'bg-surface text-subtle border border-border' : '',
                 ].join(' ')}>
                   {isAnswered ? '✓' : q.seq}
                 </span>
-                <p className="text-sm font-medium text-slate-800 leading-snug">{q.prompt}</p>
+                <p className="text-sm font-medium text-foreground leading-snug">{q.prompt}</p>
               </div>
 
-              <div className="ml-9 px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-lg">
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  <span className="font-semibold text-slate-600">Why I&apos;m asking: </span>
+              <div className="ml-9 px-3 py-2.5 bg-surface-raised border border-border rounded-lg">
+                <p className="text-xs text-muted leading-relaxed">
+                  <span className="font-semibold text-foreground">Why I&apos;m asking: </span>
                   {q.rationale}
                 </p>
               </div>
@@ -156,7 +156,7 @@ export default function DiscoveryScreen({ confirmedModel, onComplete }: Props) {
               )}
 
               {isAnswered && (
-                <div className="ml-9 text-sm text-slate-600 italic">
+                <div className="ml-9 text-sm text-muted italic">
                   &ldquo;{q.answer}&rdquo;
                 </div>
               )}
@@ -166,8 +166,8 @@ export default function DiscoveryScreen({ confirmedModel, onComplete }: Props) {
       </div>
 
       {allAnswered && (
-        <div className="flex justify-end pt-2 border-t border-slate-100">
-          <Button onClick={handleComplete} disabled={loading}>
+        <div className="flex justify-end pt-2 border-t border-border">
+          <Button variant="accent" onClick={handleComplete} disabled={loading}>
             {loading ? 'Preparing assessment…' : 'Generate assessment →'}
           </Button>
         </div>
@@ -196,8 +196,8 @@ function AnswerInput({ question, onAnswer }: { question: Question; onAnswer: (a:
         autoFocus
       />
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-500">Enter to confirm</span>
-        <Button size="sm" onClick={submit} disabled={value.trim().length === 0}>
+        <span className="text-xs text-subtle">Enter to confirm</span>
+        <Button variant="accent" size="sm" onClick={submit} disabled={value.trim().length === 0}>
           Confirm →
         </Button>
       </div>
