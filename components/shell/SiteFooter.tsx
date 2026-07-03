@@ -1,5 +1,5 @@
 import { Mail, Globe } from 'lucide-react'
-import { PORTFOLIO_URL } from '@/lib/site'
+import { PORTFOLIO_URL, LINKEDIN_URL } from '@/lib/site'
 
 const CONTACT_LINKS = [
   {
@@ -14,7 +14,7 @@ const CONTACT_LINKS = [
   },
   {
     key: 'linkedin',
-    href: 'https://www.linkedin.com/in/shriyashish-mishra/',
+    href: LINKEDIN_URL,
     label: 'LinkedIn',
     icon: (
       <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
@@ -38,14 +38,14 @@ const CONTACT_LINKS = [
 
 export default function SiteFooter() {
   return (
-    <footer className="border-t border-slate-200 bg-white print:hidden">
-      <div className="mx-auto max-w-3xl px-6 py-6 flex items-center justify-between flex-wrap gap-3">
+    <footer className="border-t border-border bg-background print:hidden">
+      <div className="mx-auto max-w-6xl px-6 py-6 flex items-center justify-between flex-wrap gap-3">
         <div className="flex flex-col gap-0.5">
-          <p className="text-xs text-slate-500">
-            <span className="font-semibold text-slate-700">RegImpact AI</span> — AI-Powered Regulatory Compliance Assessment
+          <p className="text-xs text-muted">
+            <span className="font-semibold text-foreground">RegImpact AI</span> — AI-Powered Regulatory Compliance Assessment
           </p>
-          <p className="text-xs text-slate-400">
-            Built by <span className="font-medium text-slate-600">Shriyashish Mishra</span> — Product Manager
+          <p className="text-xs text-subtle">
+            Built by <span className="font-medium text-muted">Shriyashish Mishra</span> — AI Product Management Portfolio
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -56,7 +56,7 @@ export default function SiteFooter() {
               target={link.key === 'email' ? undefined : '_blank'}
               rel={link.key === 'email' ? undefined : 'noopener noreferrer'}
               aria-label={link.label}
-              className="text-slate-500 hover:text-slate-700 transition-colors"
+              className="text-subtle hover:text-accent transition-colors"
             >
               {link.icon}
             </a>

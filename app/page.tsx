@@ -58,7 +58,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <SiteHeader current="home" />
+      <SiteHeader current="live" />
       <div className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-3xl px-6 py-4">
           <StepIndicator currentStep={STEP_NUMBER[step]} />

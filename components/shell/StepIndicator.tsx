@@ -18,10 +18,10 @@ export default function StepIndicator({ currentStep }: Props) {
             <div key={label} className="flex items-center flex-1 min-w-0">
               <div className="flex flex-col items-center gap-1 flex-shrink-0">
                 <div className={[
-                  'w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-colors',
-                  isComplete ? 'bg-slate-800 text-white'                          : '',
-                  isActive   ? 'bg-indigo-600 text-white ring-2 ring-indigo-300'  : '',
-                  isUpcoming ? 'bg-slate-100 text-slate-500'                      : '',
+                  'w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold font-mono transition-all duration-200',
+                  isComplete ? 'bg-surface-raised text-foreground border border-border' : '',
+                  isActive   ? 'bg-accent text-zinc-950 ring-2 ring-accent/30'          : '',
+                  isUpcoming ? 'bg-surface text-subtle border border-border'            : '',
                 ].join(' ')}>
                   {isComplete ? '✓' : stepNum}
                 </div>
@@ -30,9 +30,9 @@ export default function StepIndicator({ currentStep }: Props) {
                     (mobile-only) tells the user which step they're on instead. */}
                 <span className={[
                   'hidden sm:inline text-xs font-medium whitespace-nowrap',
-                  isComplete ? 'text-slate-600'  : '',
-                  isActive   ? 'text-indigo-600' : '',
-                  isUpcoming ? 'text-slate-500'  : '',
+                  isComplete ? 'text-muted'  : '',
+                  isActive   ? 'text-accent' : '',
+                  isUpcoming ? 'text-subtle' : '',
                 ].join(' ')}>
                   {label}
                 </span>
@@ -40,8 +40,8 @@ export default function StepIndicator({ currentStep }: Props) {
 
               {i < STEPS.length - 1 && (
                 <div className={[
-                  'h-px flex-1 mx-2 mb-4 transition-colors',
-                  stepNum < currentStep ? 'bg-slate-800' : 'bg-slate-200',
+                  'h-px flex-1 mx-2 mb-4 transition-colors duration-200',
+                  stepNum < currentStep ? 'bg-accent/40' : 'bg-border',
                 ].join(' ')} />
               )}
             </div>
@@ -49,7 +49,7 @@ export default function StepIndicator({ currentStep }: Props) {
         })}
       </div>
 
-      <p className="sm:hidden text-xs font-medium text-indigo-600 text-center">
+      <p className="sm:hidden text-xs font-medium text-accent text-center">
         Step {currentStep} of {STEPS.length}: {STEPS[currentStep - 1]}
       </p>
     </div>

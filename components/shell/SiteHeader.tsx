@@ -1,26 +1,38 @@
 import Link from 'next/link'
-import { GITHUB_URL } from '@/lib/site'
+import { GITHUB_URL, LINKEDIN_URL, PORTFOLIO_URL } from '@/lib/site'
 
-type NavKey = 'home' | 'sample' | 'case-study' | 'architecture'
+type NavKey = 'home' | 'live' | 'sample' | 'case-study' | 'architecture'
 
 type Props = {
   current?: NavKey
 }
 
 const LINKS: { key: NavKey; href: string; label: string }[] = [
-  { key: 'sample',       href: '/demo/sample', label: 'Sample Report' },
+  { key: 'live',         href: '/',             label: 'Try Live' },
+  { key: 'sample',       href: '/demo/sample',  label: 'Sample Report' },
   { key: 'case-study',   href: '/case-study',   label: 'Case Study' },
   { key: 'architecture', href: '/architecture', label: 'Architecture' },
 ]
 
+const EXTERNAL_LINKS = [
+  { key: 'work',     href: PORTFOLIO_URL, label: 'Work' },
+  { key: 'github',   href: GITHUB_URL,    label: 'GitHub' },
+  { key: 'linkedin', href: LINKEDIN_URL,  label: 'LinkedIn' },
+]
+
 export default function SiteHeader({ current = 'home' }: Props) {
   return (
-    <div className="border-b border-slate-200 bg-white">
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 py-4 flex items-center justify-between flex-wrap gap-x-4 gap-y-2">
-        <Link href="/" className="text-sm font-semibold text-slate-900 tracking-tight shrink-0">
-          RegImpact AI
+    <div className="border-b border-border bg-background">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-4 flex items-center justify-between flex-wrap gap-x-6 gap-y-2">
+        <Link href="/" className="flex items-center gap-2 shrink-0">
+          <span className="flex items-center justify-center w-6 h-6 rounded-md bg-accent text-zinc-950 text-xs font-bold font-mono">
+            R
+          </span>
+          <span className="text-sm font-semibold text-foreground tracking-tight">
+            RegImpact AI
+          </span>
         </Link>
-        <nav className="flex items-center flex-wrap gap-x-4 gap-y-1.5">
+        <nav className="flex items-center flex-wrap gap-x-5 gap-y-1.5">
           {LINKS.map(link => (
             <Link
               key={link.key}
@@ -28,21 +40,25 @@ export default function SiteHeader({ current = 'home' }: Props) {
               className={[
                 'text-xs font-medium transition-colors whitespace-nowrap',
                 current === link.key
-                  ? 'text-indigo-600'
-                  : 'text-slate-500 hover:text-slate-600',
+                  ? 'text-accent'
+                  : 'text-muted hover:text-foreground',
               ].join(' ')}
             >
               {link.label}
             </Link>
           ))}
-          <a
-            href={GITHUB_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs font-medium text-slate-500 hover:text-slate-600 transition-colors whitespace-nowrap"
-          >
-            GitHub
-          </a>
+          <span className="w-px h-3.5 bg-border" aria-hidden="true" />
+          {EXTERNAL_LINKS.map(link => (
+            <a
+              key={link.key}
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-muted hover:text-foreground transition-colors whitespace-nowrap"
+            >
+              {link.label}
+            </a>
+          ))}
         </nav>
       </div>
     </div>

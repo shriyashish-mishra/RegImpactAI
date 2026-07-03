@@ -1,28 +1,69 @@
 @import "tailwindcss";
 
+/* Dark theme tokens — semantic names so every component references
+   "surface"/"border"/"muted"/"accent" instead of repeating raw zinc/emerald
+   values everywhere. Accent (emerald) is deliberately a single color used
+   for exactly one thing at a time: selected/current/success/positive —
+   never decorative, per the design reference. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background:     #09090b; /* zinc-950 */
+  --surface:        #18181b; /* zinc-900 — card backgrounds */
+  --surface-raised: #1f1f23; /* slightly lighter — nested/hover surfaces */
+  --border:         #27272a; /* zinc-800 */
+  --foreground:     #fafafa; /* zinc-50 — headings, high-emphasis text */
+  --muted:          #a1a1aa; /* zinc-400 — body copy */
+  --subtle:         #71717a; /* zinc-500 — meta text, timestamps */
+  --accent:         #34d399; /* emerald-400 */
+  --accent-strong:  #10b981; /* emerald-500 — accent on light/white backgrounds */
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background:     var(--background);
+  --color-surface:        var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border:         var(--border);
+  --color-foreground:     var(--foreground);
+  --color-muted:          var(--muted);
+  --color-subtle:         var(--subtle);
+  --color-accent:         var(--accent);
+  --color-accent-strong:  var(--accent-strong);
+  --font-sans:  var(--font-inter);
+  --font-serif: var(--font-playfair);
+  --font-mono:  var(--font-jetbrains-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Subtle engineering-grid texture from the design reference — deliberately
+     faint (2% white lines) so it reads as texture, not a visible grid. */
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 48px 48px;
 }
 
-/* PDF export (PrintButton triggers window.print()) — keep severity colors
-   and badge backgrounds instead of the browser's default print stripping. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* PDF export (PrintButton triggers window.print()) — a compliance report
+   handed to a stakeholder should print like a normal document, not a dark
+   screen capture, regardless of the on-screen theme. Report-specific
+   components (ReportView, FindingCard, etc.) additionally force light
+   surface/text colors under print via print: variants. */
 @media print {
   * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+  body {
+    background: white;
+    color: black;
   }
 }

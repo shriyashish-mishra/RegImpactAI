@@ -4,14 +4,20 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/cn'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
-        default:  'bg-indigo-600 text-white shadow hover:bg-indigo-700',
-        outline:  'border border-slate-200 bg-white shadow-sm hover:bg-slate-50 hover:text-slate-900',
-        ghost:    'hover:bg-slate-100 hover:text-slate-900',
-        link:     'text-indigo-600 underline-offset-4 hover:underline',
+        // High-contrast dark button, not green — green is reserved for
+        // accent (below). Matches the "Get In Touch" header CTA pattern.
+        default: 'bg-surface text-foreground border border-border hover:border-subtle hover:bg-surface-raised',
+        // The one place solid green fill is used — sparingly, for the single
+        // most important action on a screen (matches the "Report" pipeline
+        // stage's filled-green treatment in the reference).
+        accent:  'bg-accent text-zinc-950 hover:bg-accent-strong',
+        outline: 'border border-border bg-transparent text-muted hover:border-subtle hover:text-foreground',
+        ghost:   'text-muted hover:bg-surface hover:text-foreground',
+        link:    'text-accent underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-9 px-4 py-2',

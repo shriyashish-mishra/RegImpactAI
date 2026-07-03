@@ -7,5 +7,8 @@ export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://reg-impact-
 /** Repo link shown in SiteHeader. Falls back to the known repo so it works without extra config. */
 export const GITHUB_URL = process.env.NEXT_PUBLIC_GITHUB_URL ?? 'https://github.com/shriyashish-mishra/RegImpactAI'
 
-/** Creator's personal portfolio site, shown in SiteFooter. */
+/** Creator's personal portfolio site, shown in SiteHeader/SiteFooter. */
 export const PORTFOLIO_URL = 'https://shriyashish.lovable.app'
+
+/** Creator's LinkedIn, shown in SiteHeader/SiteFooter. */
+export const LINKEDIN_URL = 'https://www.linkedin.com/in/shriyashish-mishra/'

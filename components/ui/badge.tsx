@@ -7,9 +7,12 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default:  'border-transparent bg-indigo-600 text-white',
-        outline:  'border-slate-200 text-slate-600',
-        secondary:'border-transparent bg-slate-100 text-slate-700',
+        // Solid green pill — reserve for genuinely selected/success states,
+        // not decorative tagging (see Button's "accent" variant for the
+        // same rule applied to buttons).
+        default:   'border-transparent bg-accent text-zinc-950',
+        outline:   'border-border text-muted bg-transparent',
+        secondary: 'border-border bg-surface text-muted',
       },
     },
     defaultVariants: { variant: 'default' },
