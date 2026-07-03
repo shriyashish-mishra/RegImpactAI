@@ -70,8 +70,8 @@ Create a `.env.local` file containing:
 
 ```text
 GOOGLE_GENERATIVE_AI_API_KEY=
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
 
 # Required only for /admin (report history) — pick your own value
 ADMIN_PASSWORD=
@@ -80,6 +80,12 @@ ADMIN_PASSWORD=
 NEXT_PUBLIC_SITE_URL=
 NEXT_PUBLIC_GITHUB_URL=
 ```
+
+`SUPABASE_URL`/`SUPABASE_ANON_KEY` have no `NEXT_PUBLIC_` prefix — this app
+only talks to Supabase from the server, so the browser-exposure prefix
+isn't needed. These are also exactly the names Vercel's Supabase
+integration provisions automatically if you connect a project via the
+Vercel dashboard instead of setting them by hand.
 
 Then apply the SQL migrations in `supabase/migrations/` (in order) via the Supabase SQL Editor —
 see `supabase/migrations/README.md`.
