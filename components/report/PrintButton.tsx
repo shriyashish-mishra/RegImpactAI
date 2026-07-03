@@ -10,7 +10,7 @@ export default function PrintButton() {
   return (
     <button
       onClick={() => window.print()}
-      className="print:hidden text-sm font-medium text-indigo-600 hover:text-indigo-800 underline underline-offset-2 transition-colors"
+      className="print:hidden text-sm font-medium text-accent hover:underline underline-offset-2 transition-colors"
     >
       Download PDF
     </button>

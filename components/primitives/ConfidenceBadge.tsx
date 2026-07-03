@@ -5,9 +5,9 @@ type Props = {
 }
 
 const STYLES: Record<ConfidenceLevel, string> = {
-  high:     'bg-emerald-50 text-emerald-700 border-emerald-200',
-  moderate: 'bg-amber-50   text-amber-700   border-amber-200',
-  low:      'bg-slate-100  text-slate-500   border-slate-200',
+  high:     'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 print:bg-emerald-50 print:text-emerald-700 print:border-emerald-200',
+  moderate: 'bg-amber-500/10   text-amber-300   border-amber-500/30   print:bg-amber-50 print:text-amber-700 print:border-amber-200',
+  low:      'bg-surface-raised text-subtle      border-border',
 }
 
 const LABELS: Record<ConfidenceLevel, string> = {

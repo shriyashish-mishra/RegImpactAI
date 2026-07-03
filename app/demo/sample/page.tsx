@@ -4,6 +4,7 @@
 // vars configured, so a reviewer can see a finished report immediately.
 
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import SiteHeader from '@/components/shell/SiteHeader'
 import ReportView from '@/components/report/ReportView'
 import PrintButton from '@/components/report/PrintButton'
@@ -21,17 +22,17 @@ export const metadata: Metadata = {
 
 export default function SampleDemoPage() {
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background">
       <div className="print:hidden">
         <SiteHeader current="sample" />
 
         <div className="mx-auto max-w-3xl px-6 pt-8">
-          <p className="text-xs text-slate-500 bg-slate-100 border border-slate-200 rounded-lg px-4 py-3 leading-relaxed">
+          <p className="text-xs text-muted bg-surface border border-border rounded-lg px-4 py-3 leading-relaxed">
             This is a static sample report — no API calls, no setup required. Its findings cite
             real clauses from the same regulatory corpus the live assessment flow uses.{' '}
-            <a href="/" className="text-indigo-600 hover:underline">
+            <Link href="/" className="text-accent hover:underline">
               Try the real flow →
-            </a>
+            </Link>
           </p>
         </div>
       </div>

@@ -54,16 +54,32 @@ body {
 
 /* PDF export (PrintButton triggers window.print()) — a compliance report
    handed to a stakeholder should print like a normal document, not a dark
-   screen capture, regardless of the on-screen theme. Report-specific
-   components (ReportView, FindingCard, etc.) additionally force light
-   surface/text colors under print via print: variants. */
+   screen capture, regardless of the on-screen theme. Redefining the same
+   semantic tokens every component already uses (bg-surface, text-muted,
+   border-border, etc.) means the whole report flips to a light document
+   automatically — no per-component print: overrides needed for layout.
+   Classification/priority/confidence colors (emerald/red/amber semantic
+   badges) are the one exception: those use raw Tailwind color utilities
+   directly, not these tokens, so they carry their own print: variants
+   where they're defined (FindingCard, ExecutiveSummary, CitationBlock,
+   ConfidenceBadge) since a dark-mode emerald-500/10 tint is illegible
+   printed on white paper. */
 @media print {
   * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+  :root {
+    --background:     #ffffff;
+    --surface:        #ffffff;
+    --surface-raised: #f8fafc;
+    --border:         #e2e8f0;
+    --foreground:     #0f172a;
+    --muted:          #475569;
+    --subtle:         #64748b;
+  }
   body {
     background: white;
-    color: black;
+    background-image: none;
   }
 }
