@@ -9,6 +9,7 @@ Apply in numeric order via the Supabase SQL Editor:
 0004_create_recommendations_and_citations.sql
 0005_create_questions.sql
 0006_add_verified_to_finding_citations.sql
+0007_disable_rls.sql
 ```
 
 These tables are everything the vertical slice (Synthesize → Discovery →
@@ -30,6 +31,12 @@ regulation (all KYC_AML clauses today — see the header comment in
 `lib/corpus.ts`). The value is resolved server-side from the corpus, not
 trusted from the model's output, and the UI must show an "unverified" notice
 wherever `verified: false` — see `components/primitives/CitationBlock.tsx`.
+
+RLS (0007) is explicitly disabled — newly created Supabase projects enable
+it by default on every table, but this app's anon-key-does-everything
+design predates that default and has no RLS policies defined. If a fresh
+project reports `42501: row-level security policy` errors on insert, this
+migration is why it's needed.
 
 Schema matches `lib/types.ts` exactly as it exists in this repo today:
 `findings` has no `run_id` column, and `recommendations` has no `status`
