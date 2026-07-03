@@ -94,6 +94,19 @@ export default function ExecutiveSummary({ findings, discoveryImpact }: Props) {
           the answers directly narrow what the assessment has to guess at.
         </span>
       </div>
+
+      <div className="px-5 py-4 border-t border-slate-200 bg-white flex flex-col gap-2">
+        <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Regulatory Coverage</span>
+        <p className="text-sm text-slate-600">
+          {summary.totalAssessed} of {summary.totalAssessed} clauses considered produced a classified verdict below.
+        </p>
+        <span className="text-xs text-slate-400">
+          Every clause in scope for this product is tested directly and accounted for in this report —
+          none are filtered out by a relevance step before reaching a conclusion. See{' '}
+          <a href="/architecture" className="text-indigo-600 hover:underline">/architecture</a>{' '}
+          for how the regulatory corpus is scoped.
+        </span>
+      </div>
     </div>
   )
 }

@@ -3,11 +3,16 @@
 // components hand-rolled near-identical markup independently; consolidated
 // here so the classification/evidence UI added for explainability only has
 // one place to live.
+//
+// Section order is deliberate: Finding -> Evidence -> Citation, so a reader
+// can trace a conclusion back to its source without hunting for it —
+// citations used to render after recommendations, which broke that chain.
 
 import type { Finding, FindingClassification } from '@/lib/types'
 import ConfidenceBadge from '@/components/primitives/ConfidenceBadge'
 import CitationBlock   from '@/components/primitives/CitationBlock'
 import { priorityTier, type PriorityTier } from '@/lib/report/executiveSummary'
+import { hasWeakEvidenceSupport } from '@/lib/report/trust'
 
 type Props = {
   finding: Finding
@@ -47,6 +52,7 @@ export default function FindingCard({ finding, variant = 'full' }: Props) {
   const style = CLASSIFICATION_STYLE[finding.classification]
   const compact = variant === 'compact'
   const tier = priorityTier(finding)
+  const weakEvidence = !compact && hasWeakEvidenceSupport(finding)
 
   const citations = compact ? finding.citations.slice(0, 1) : finding.citations
   const recommendations = compact ? finding.recommendations.slice(0, 1) : finding.recommendations
@@ -84,13 +90,19 @@ export default function FindingCard({ finding, variant = 'full' }: Props) {
         </p>
       )}
 
+      {weakEvidence && (
+        <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 ml-4">
+          ⚠️ This finding claims {finding.confidence} confidence but lists no specific supporting evidence below — treat with extra caution before acting on it.
+        </p>
+      )}
+
       {!compact && (finding.evidence_found.length > 0 || finding.evidence_missing.length > 0 || finding.inference_made) && (
         <div className="pl-4 flex flex-col gap-2 border-t border-black/5 pt-3">
-          <span className="text-xs font-semibold text-slate-600">Reasoning</span>
+          <span className="text-xs font-semibold text-slate-600">Evidence → Citation trail</span>
 
           {finding.evidence_found.length > 0 && (
             <div className="flex flex-col gap-0.5">
-              <span className="text-xs font-medium text-emerald-700">Evidence found</span>
+              <span className="text-xs font-medium text-emerald-700">Detected</span>
               <ul className="list-disc list-inside">
                 {finding.evidence_found.map((e, i) => (
                   <li key={i} className="text-xs text-slate-600">{e}</li>
@@ -101,7 +113,7 @@ export default function FindingCard({ finding, variant = 'full' }: Props) {
 
           {finding.evidence_missing.length > 0 && (
             <div className="flex flex-col gap-0.5">
-              <span className="text-xs font-medium text-amber-700">Evidence missing</span>
+              <span className="text-xs font-medium text-amber-700">Not detected / unconfirmed</span>
               <ul className="list-disc list-inside">
                 {finding.evidence_missing.map((e, i) => (
                   <li key={i} className="text-xs text-slate-600">{e}</li>
@@ -112,10 +124,23 @@ export default function FindingCard({ finding, variant = 'full' }: Props) {
 
           {finding.inference_made && (
             <div className="flex flex-col gap-0.5">
-              <span className="text-xs font-medium text-slate-600">Inference made</span>
+              <span className="text-xs font-medium text-slate-600">Inferred (and why)</span>
               <p className="text-xs text-slate-600">{finding.inference_made}</p>
             </div>
           )}
+        </div>
+      )}
+
+      {citations.length > 0 && (
+        <div className="pl-4 flex flex-col gap-2">
+          {!compact && (
+            <span className="text-xs font-medium text-slate-600">
+              ↳ Traced to source clause{citations.length === 1 ? '' : 's'}
+            </span>
+          )}
+          {citations.map((citation, i) => (
+            <CitationBlock key={i} citation={citation} />
+          ))}
         </div>
       )}
 
@@ -146,14 +171,6 @@ export default function FindingCard({ finding, variant = 'full' }: Props) {
               ))}
             </ul>
           )}
-        </div>
-      )}
-
-      {citations.length > 0 && (
-        <div className="pl-4 flex flex-col gap-2">
-          {citations.map((citation, i) => (
-            <CitationBlock key={i} citation={citation} />
-          ))}
         </div>
       )}
     </div>

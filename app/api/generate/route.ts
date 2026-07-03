@@ -81,8 +81,6 @@ export async function POST(req: Request) {
     return Response.json({ error: 'Server misconfigured: missing GOOGLE_GENERATIVE_AI_API_KEY' }, { status: 500 })
   }
 
-  const clauses = ASSESSABLE_AREA_CODES.flatMap(getClausesByAreaCode)
-
   let supabase: ReturnType<typeof createServerClient>
   try {
     supabase = createServerClient()
@@ -99,7 +97,10 @@ export async function POST(req: Request) {
       }
 
       try {
-        emit({ type: 'step', text: `Testing ${ASSESSABLE_AREA_CODES.join(' + ')} clauses against ${confirmedModel.product_name}…` })
+        emit({ type: 'step', text: `Retrieving ${ASSESSABLE_AREA_CODES.join(' + ')} clauses from the regulatory corpus…` })
+        const clauses = ASSESSABLE_AREA_CODES.flatMap(getClausesByAreaCode)
+
+        emit({ type: 'step', text: `Testing ${clauses.length} clause${clauses.length === 1 ? '' : 's'} against ${confirmedModel.product_name}…` })
 
         const result = streamText({
           model: google('gemini-2.5-flash'),
@@ -150,6 +151,9 @@ export async function POST(req: Request) {
             ...c,
             verified: getClauseById(c.corpus_clause_id)?.verified ?? false,
           }))
+          for (const c of citations) {
+            emit({ type: 'step', text: `Verifying citation: ${c.clause_ref}…` })
+          }
 
           if (f.impacts.length > 0) {
             await supabase.from('finding_impacts').insert(
@@ -200,6 +204,7 @@ export async function POST(req: Request) {
           emit({ type: 'finding', finding })
         }
 
+        emit({ type: 'step', text: 'Preparing report…' })
         emit({ type: 'step', text: `Assessment complete — ${count} clause${count === 1 ? '' : 's'} assessed, ${flagged} flagged for review.` })
         emit({ type: 'done', assessment_id: assessmentId })
       } catch (err) {

@@ -82,7 +82,9 @@ export default function ArchitecturePage() {
             <code className="text-xs font-mono bg-slate-100 px-1.5 py-0.5 rounded">done</code>, or{' '}
             <code className="text-xs font-mono bg-slate-100 px-1.5 py-0.5 rounded">error</code> event. The client reads the
             response body as a stream, splits on newlines, and renders findings as they arrive
-            rather than waiting for the full assessment.
+            rather than waiting for the full assessment. The <code className="text-xs font-mono bg-slate-100 px-1.5 py-0.5 rounded">step</code>{' '}
+            messages narrate real pipeline stages as they happen server-side — corpus retrieval,
+            per-citation verification, report assembly — not a simulated progress bar.
           </p>
         </section>
 
@@ -101,6 +103,25 @@ export default function ArchitecturePage() {
           <p className="text-xs text-slate-500 leading-relaxed">
             The regulatory corpus itself is not in Postgres — it&apos;s a curated array in{' '}
             <code className="font-mono bg-slate-100 px-1 py-0.5 rounded">lib/corpus.ts</code>, filtered by area code.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
+            Retrieval
+          </h2>
+          <p className="text-sm text-slate-600 leading-relaxed">
+            This is not embeddings-based semantic search over a large corpus — the regulatory
+            corpus today is 19 clauses total, small enough that every clause for a triggered
+            area (<code className="text-xs font-mono bg-slate-100 px-1 py-0.5 rounded">DLG</code> +{' '}
+            <code className="text-xs font-mono bg-slate-100 px-1 py-0.5 rounded">KYC_AML</code>) is
+            sent to the model directly, every time. There is no relevance-ranking or filtering step
+            that could silently drop a clause before it&apos;s tested. That&apos;s a deliberate
+            trade-off, not a limitation being glossed over: at this scale, testing everything is
+            simpler and more auditable than approximating retrieval, and the report reflects that —
+            it shows a classified verdict for every clause considered, not a curated subset of the
+            interesting ones. This would need to change if the corpus grew into the hundreds of
+            clauses, but it hasn&apos;t yet.
           </p>
         </section>
 
