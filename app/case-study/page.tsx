@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import SiteHeader from '@/components/shell/SiteHeader'
+import { PORTFOLIO_URL } from '@/lib/site'
 
 const TITLE = 'Case Study — RegImpact AI'
 const DESCRIPTION = 'Why RegImpact AI was built, and how it works.'
@@ -165,6 +166,24 @@ export default function CaseStudyPage() {
             more regulatory domains, and full multi-user auth. See the{' '}
             <Link href="/architecture" className="text-indigo-600 hover:underline">architecture walkthrough</Link>{' '}
             for the current scope in detail.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
+            About the creator
+          </h2>
+          <p className="text-sm text-slate-600 leading-relaxed">
+            I&apos;m Shriyashish Mishra, a Product Manager. I built RegImpact AI to answer a
+            question I kept running into: most AI product demos are easy to build impressive-
+            looking output for, but hard to trust — a plausible-sounding finding isn&apos;t the
+            same as a correct one. This project is my attempt at the harder version of that
+            problem: an AI system whose conclusions are traceable back to a real source, end to
+            end, in a domain (regulatory compliance) where an unverifiable answer is actively
+            worse than no answer. See more of my work at{' '}
+            <a href={PORTFOLIO_URL} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
+              my portfolio
+            </a>.
           </p>
         </section>
 

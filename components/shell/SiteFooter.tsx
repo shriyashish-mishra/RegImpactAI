@@ -1,4 +1,5 @@
-import { Mail } from 'lucide-react'
+import { Mail, Globe } from 'lucide-react'
+import { PORTFOLIO_URL } from '@/lib/site'
 
 const CONTACT_LINKS = [
   {
@@ -22,6 +23,12 @@ const CONTACT_LINKS = [
     ),
   },
   {
+    key: 'portfolio',
+    href: PORTFOLIO_URL,
+    label: 'Portfolio',
+    icon: <Globe size={16} aria-hidden="true" />,
+  },
+  {
     key: 'email',
     href: 'mailto:shriyashishm@gmail.com',
     label: 'Email',
@@ -33,9 +40,14 @@ export default function SiteFooter() {
   return (
     <footer className="border-t border-slate-200 bg-white print:hidden">
       <div className="mx-auto max-w-3xl px-6 py-6 flex items-center justify-between flex-wrap gap-3">
-        <p className="text-xs text-slate-500">
-          Built by <span className="font-medium text-slate-700">Shriyashish Mishra</span> — Product Manager
-        </p>
+        <div className="flex flex-col gap-0.5">
+          <p className="text-xs text-slate-500">
+            <span className="font-semibold text-slate-700">RegImpact AI</span> — AI-Powered Regulatory Compliance Assessment
+          </p>
+          <p className="text-xs text-slate-400">
+            Built by <span className="font-medium text-slate-600">Shriyashish Mishra</span> — Product Manager
+          </p>
+        </div>
         <div className="flex items-center gap-4">
           {CONTACT_LINKS.map(link => (
             <a

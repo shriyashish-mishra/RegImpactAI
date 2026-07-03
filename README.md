@@ -106,17 +106,40 @@ resets automatically every 24 hours. See `/admin` for live usage.
 Then apply the SQL migrations in `supabase/migrations/` (in order) via the Supabase SQL Editor —
 see `supabase/migrations/README.md`.
 
-## Future Improvements
+## Deployment
+
+This runs entirely on free tiers — no paid infrastructure required:
+
+1. **Vercel**: import the GitHub repo, connect a Supabase project through Vercel's native Supabase integration (auto-provisions `SUPABASE_URL`/`SUPABASE_ANON_KEY`), then add `GOOGLE_GENERATIVE_AI_API_KEY` and `ADMIN_PASSWORD` manually in Project Settings → Environment Variables.
+2. **Supabase**: run the migrations in `supabase/migrations/` in order via the SQL Editor (see `supabase/migrations/README.md`).
+3. Push to `main` — Vercel auto-deploys on every push.
+
+The live deployment at https://reg-impact-ai.vercel.app follows exactly this setup.
+
+## Roadmap
 
 * Verify the KYC/AML corpus clauses against RBI's current source text (currently flagged unverified — see `/architecture`)
 * More regulatory domains
 * Full multi-user authentication (current `/admin` is a single-owner password gate, not per-user accounts)
 * Team collaboration
 
+## License
+
+MIT — see [LICENSE](./LICENSE). Fork it, use it, learn from it.
+
+## Acknowledgements
+
+* [Google Gemini](https://ai.google.dev/) — the model behind every AI step in this project
+* [Vercel](https://vercel.com/) — hosting, and the [AI SDK](https://ai-sdk.dev/) used for structured generation and streaming
+* [Supabase](https://supabase.com/) — Postgres persistence
+* RBI's [Digital Lending Guidelines](https://www.rbi.org.in/) (September 2022) — source for the verified DLG clauses in the regulatory corpus
+
 ## Author
 
-Shriyashish Mishra
-
-Product Manager
+**Shriyashish Mishra** — Product Manager
 
 Built as a portfolio project demonstrating AI Product Management, prompt engineering, and full-stack product development.
+
+* GitHub: https://github.com/shriyashish-mishra
+* LinkedIn: https://www.linkedin.com/in/shriyashish-mishra/
+* Portfolio: https://shriyashish.lovable.app
