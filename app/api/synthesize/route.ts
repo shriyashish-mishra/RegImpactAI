@@ -27,6 +27,7 @@ const DraftModelSchema = z.object({
     area_name: z.string().min(1),
     status: z.enum(['triggered', 'not_triggered', 'not_applicable']),
     reason: z.string().min(1),
+    signals: z.array(z.string()),
   })),
 })
 

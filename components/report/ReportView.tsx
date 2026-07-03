@@ -3,37 +3,20 @@
 // Takes assembled ReportData; has no idea whether it came from Postgres or a fixture.
 
 import type { ReportData } from '@/lib/report/mapper'
-import ConfidenceBadge from '@/components/primitives/ConfidenceBadge'
-import CitationBlock   from '@/components/primitives/CitationBlock'
+import FindingCard from '@/components/report/FindingCard'
 
 type Props = {
   report: ReportData
 }
 
-const LENS_LABEL: Record<string, string> = {
-  product:     'Product',
-  ui:          'UI',
-  engineering: 'Engineering',
-  business:    'Business',
-}
-
-const SEVERITY_BORDER: Record<string, string> = {
-  high:   'border-red-200 bg-red-50',
-  medium: 'border-amber-200 bg-amber-50',
-  low:    'border-slate-200 bg-slate-50',
-}
-
-const SEVERITY_DOT: Record<string, string> = {
-  high:   'bg-red-500',
-  medium: 'bg-amber-400',
-  low:    'bg-slate-400',
-}
-
 export default function ReportView({ report }: Props) {
   const { assessment, findings } = report
-  const high = findings.filter(f => f.severity === 'high').length
-  const medium = findings.filter(f => f.severity === 'medium').length
-  const low = findings.filter(f => f.severity === 'low').length
+
+  const compliant     = findings.filter(f => f.classification === 'compliant')
+  const nonCompliant  = findings.filter(f => f.classification === 'non_compliant')
+  const potentialGap  = findings.filter(f => f.classification === 'potential_gap')
+  const infoRequired  = findings.filter(f => f.classification === 'info_required')
+  const flagged       = [...nonCompliant, ...potentialGap, ...infoRequired]
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16 flex flex-col gap-10">
@@ -58,66 +41,30 @@ export default function ReportView({ report }: Props) {
             No findings were identified for the applicable regulatory areas.
           </p>
         ) : (
-          <div className="flex items-center gap-4 text-sm">
-            <span className="text-slate-600">{findings.length} finding{findings.length === 1 ? '' : 's'}</span>
-            {high > 0 && <span className="text-red-600">{high} high</span>}
-            {medium > 0 && <span className="text-amber-600">{medium} medium</span>}
-            {low > 0 && <span className="text-slate-500">{low} low</span>}
+          <div className="flex items-center gap-4 text-sm flex-wrap">
+            <span className="text-slate-600">{findings.length} clause{findings.length === 1 ? '' : 's'} assessed</span>
+            {compliant.length > 0 && <span className="text-emerald-700">✅ {compliant.length} compliant</span>}
+            {nonCompliant.length > 0 && <span className="text-red-600">❌ {nonCompliant.length} non-compliant</span>}
+            {potentialGap.length > 0 && <span className="text-amber-600">⚠️ {potentialGap.length} potential gap{potentialGap.length === 1 ? '' : 's'}</span>}
+            {infoRequired.length > 0 && <span className="text-slate-500">❓ {infoRequired.length} info required</span>}
           </div>
         )}
       </div>
 
-      {findings.length > 0 && (
+      {flagged.length > 0 && (
         <div className="flex flex-col gap-4">
-          <h2 className="text-sm font-semibold text-slate-900">Findings</h2>
-          {findings.map(finding => (
-            <div key={finding.id} className={`border rounded-xl px-5 py-5 flex flex-col gap-4 ${SEVERITY_BORDER[finding.severity]}`}>
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-2.5">
-                  <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${SEVERITY_DOT[finding.severity]}`} />
-                  <div className="flex flex-col gap-0.5">
-                    <h3 className="text-sm font-semibold text-slate-900 leading-snug">{finding.title}</h3>
-                    <span className="text-xs text-slate-500">{finding.area_name}</span>
-                  </div>
-                </div>
-                <ConfidenceBadge level={finding.confidence} />
-              </div>
+          <h2 className="text-sm font-semibold text-slate-900">Findings requiring attention</h2>
+          {flagged.map(finding => (
+            <FindingCard key={finding.id} finding={finding} />
+          ))}
+        </div>
+      )}
 
-              <p className="text-sm text-slate-600 leading-relaxed pl-4">{finding.what_found}</p>
-              <p className="text-sm text-slate-500 leading-relaxed pl-4">{finding.why_matters}</p>
-
-              {finding.impacts.length > 0 && (
-                <div className="pl-4 flex flex-col gap-1.5">
-                  {finding.impacts.map((impact, j) => (
-                    <div key={j} className="flex items-start gap-2">
-                      <span className="text-xs font-semibold text-slate-500 w-20 shrink-0 mt-0.5 uppercase tracking-wide">
-                        {LENS_LABEL[impact.lens]}
-                      </span>
-                      <span className="text-xs text-slate-600">{impact.description}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {finding.recommendations.length > 0 && (
-                <div className="pl-4 pt-1 border-t border-black/5 flex flex-col gap-1">
-                  <span className="text-xs font-semibold text-slate-600">Recommendations:</span>
-                  <ul className="list-disc list-inside">
-                    {finding.recommendations.map((rec, i) => (
-                      <li key={i} className="text-xs text-slate-500">{rec}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {finding.citations.length > 0 && (
-                <div className="pl-4 flex flex-col gap-2">
-                  {finding.citations.map((citation, i) => (
-                    <CitationBlock key={i} citation={citation} />
-                  ))}
-                </div>
-              )}
-            </div>
+      {compliant.length > 0 && (
+        <div className="flex flex-col gap-4">
+          <h2 className="text-sm font-semibold text-slate-900">Confirmed compliant</h2>
+          {compliant.map(finding => (
+            <FindingCard key={finding.id} finding={finding} />
           ))}
         </div>
       )}

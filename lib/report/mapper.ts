@@ -74,12 +74,17 @@ export async function buildReport(assessmentId: string): Promise<ReportMapResult
     area_code: row.area_code,
     area_name: row.area_name,
     title: row.title,
+    classification: row.classification,
     what_found: row.what_found,
     why_matters: row.why_matters,
     severity: row.severity,
     confidence: row.confidence,
+    confidence_reasoning: row.confidence_reasoning,
     driver_clarity: row.driver_clarity,
     driver_understanding: row.driver_understanding,
+    evidence_found: row.evidence_found,
+    evidence_missing: row.evidence_missing,
+    inference_made: row.inference_made,
     impacts: impactRows
       .filter(i => i.finding_id === row.id)
       .map(i => ({ lens: i.lens, description: i.description })),

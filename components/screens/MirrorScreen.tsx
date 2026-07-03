@@ -100,9 +100,18 @@ export default function MirrorScreen({ draftModel, assessmentId, onConfirm, onSt
         <div className="flex flex-col gap-2">
           {triggered.map((area, i) => (
             <div key={i} className={`flex items-start justify-between px-4 py-3 border rounded-lg ${TRIGGER_STYLE[area.status]}`}>
-              <div className="flex flex-col gap-0.5">
+              <div className="flex flex-col gap-1.5">
                 <span className="text-sm font-medium text-amber-900">{area.area_name}</span>
                 <span className="text-xs text-amber-700/70">{area.reason}</span>
+                {area.signals.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-0.5">
+                    {area.signals.map((signal, j) => (
+                      <span key={j} className="text-[11px] leading-none px-1.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                        {signal}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
               <Badge variant="outline" className="text-xs shrink-0 ml-4 mt-0.5 border-amber-300 text-amber-700 bg-amber-50">
                 In scope

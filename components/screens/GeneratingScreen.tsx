@@ -1,9 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import ConfidenceBadge  from '@/components/primitives/ConfidenceBadge'
-import CitationBlock    from '@/components/primitives/CitationBlock'
 import NarratedProgress from '@/components/primitives/NarratedProgress'
+import FindingCard from '@/components/report/FindingCard'
 import { readLines, parseStreamLine } from '@/lib/stream'
 import type { ConfirmedModel, Question, Finding } from '@/lib/types'
 
@@ -18,25 +17,6 @@ type State =
   | { phase: 'generating'; steps: string[]; findings: Finding[] }
   | { phase: 'complete';   steps: string[]; findings: Finding[] }
   | { phase: 'error';      steps: string[]; findings: Finding[]; message: string }
-
-const LENS_LABEL: Record<string, string> = {
-  product:     'Product',
-  ui:          'UI',
-  engineering: 'Engineering',
-  business:    'Business',
-}
-
-const SEVERITY_BORDER: Record<string, string> = {
-  high:   'border-red-200 bg-red-50',
-  medium: 'border-amber-200 bg-amber-50',
-  low:    'border-slate-200 bg-slate-50',
-}
-
-const SEVERITY_DOT: Record<string, string> = {
-  high:   'bg-red-500',
-  medium: 'bg-amber-400',
-  low:    'bg-slate-400',
-}
 
 export default function GeneratingScreen({ confirmedModel, questions, assessmentId, onComplete }: Props) {
   const [state, setState] = useState<State>({ phase: 'generating', steps: [], findings: [] })
@@ -89,12 +69,14 @@ export default function GeneratingScreen({ confirmedModel, questions, assessment
     }
   }
 
+  const flaggedCount = state.findings.filter(f => f.classification !== 'compliant').length
+
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
           {state.phase === 'complete'
-            ? `Assessment complete — ${state.findings.length} finding${state.findings.length === 1 ? '' : 's'}`
+            ? `Assessment complete — ${state.findings.length} clause${state.findings.length === 1 ? '' : 's'} assessed, ${flaggedCount} flagged`
             : 'Assessing your product…'}
         </h1>
         <p className="text-slate-500 text-sm">
@@ -121,41 +103,7 @@ export default function GeneratingScreen({ confirmedModel, questions, assessment
       {state.findings.length > 0 && (
         <div className="flex flex-col gap-4">
           {state.findings.map(finding => (
-            <div key={finding.id} className={`border rounded-xl px-5 py-5 flex flex-col gap-4 ${SEVERITY_BORDER[finding.severity]}`}>
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-2.5">
-                  <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${SEVERITY_DOT[finding.severity]}`} />
-                  <h3 className="text-sm font-semibold text-slate-900 leading-snug">{finding.title}</h3>
-                </div>
-                <ConfidenceBadge level={finding.confidence} />
-              </div>
-
-              <p className="text-sm text-slate-600 leading-relaxed pl-4">{finding.what_found}</p>
-
-              <div className="pl-4 flex flex-col gap-1.5">
-                {finding.impacts.map((impact, j) => (
-                  <div key={j} className="flex items-start gap-2">
-                    <span className="text-xs font-semibold text-slate-500 w-20 shrink-0 mt-0.5 uppercase tracking-wide">
-                      {LENS_LABEL[impact.lens]}
-                    </span>
-                    <span className="text-xs text-slate-600">{impact.description}</span>
-                  </div>
-                ))}
-              </div>
-
-              {finding.recommendations[0] && (
-                <div className="pl-4 pt-1 border-t border-black/5">
-                  <p className="text-xs text-slate-500">
-                    <span className="font-semibold text-slate-600">Recommended: </span>
-                    {finding.recommendations[0]}
-                  </p>
-                </div>
-              )}
-
-              <div className="pl-4">
-                <CitationBlock citation={finding.citations[0]} />
-              </div>
-            </div>
+            <FindingCard key={finding.id} finding={finding} variant="compact" />
           ))}
         </div>
       )}

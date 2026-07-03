@@ -31,12 +31,17 @@ const FindingSchema = z.object({
   area_code: z.string().min(1),
   area_name: z.string().min(1),
   title: z.string().min(1),
+  classification: z.enum(['compliant', 'non_compliant', 'potential_gap', 'info_required']),
   what_found: z.string().min(1),
   why_matters: z.string().min(1),
   severity: z.enum(['high', 'medium', 'low']),
   confidence: z.enum(['high', 'moderate', 'low']),
+  confidence_reasoning: z.string().min(1),
   driver_clarity: z.enum(['high', 'moderate', 'low']),
   driver_understanding: z.enum(['high', 'moderate', 'low']),
+  evidence_found: z.array(z.string()),
+  evidence_missing: z.array(z.string()),
+  inference_made: z.string(),
   impacts: z.array(z.object({
     lens: z.enum(['product', 'ui', 'engineering', 'business']),
     description: z.string().min(1),
@@ -105,8 +110,10 @@ export async function POST(req: Request) {
         })
 
         let count = 0
+        let flagged = 0
         for await (const f of result.elementStream) {
           count++
+          if (f.classification !== 'compliant') flagged++
           const { data: findingRow, error: findingErr } = await supabase
             .from('findings')
             .insert({
@@ -114,12 +121,17 @@ export async function POST(req: Request) {
               area_code: f.area_code,
               area_name: f.area_name,
               title: f.title,
+              classification: f.classification,
               what_found: f.what_found,
               why_matters: f.why_matters,
               severity: f.severity,
               confidence: f.confidence,
+              confidence_reasoning: f.confidence_reasoning,
               driver_clarity: f.driver_clarity,
               driver_understanding: f.driver_understanding,
+              evidence_found: f.evidence_found,
+              evidence_missing: f.evidence_missing,
+              inference_made: f.inference_made,
             })
             .select('id')
             .single()
@@ -170,12 +182,17 @@ export async function POST(req: Request) {
             area_code: f.area_code,
             area_name: f.area_name,
             title: f.title,
+            classification: f.classification,
             what_found: f.what_found,
             why_matters: f.why_matters,
             severity: f.severity,
             confidence: f.confidence,
+            confidence_reasoning: f.confidence_reasoning,
             driver_clarity: f.driver_clarity,
             driver_understanding: f.driver_understanding,
+            evidence_found: f.evidence_found,
+            evidence_missing: f.evidence_missing,
+            inference_made: f.inference_made,
             impacts: f.impacts,
             citations,
             recommendations: f.recommendations,
@@ -183,7 +200,7 @@ export async function POST(req: Request) {
           emit({ type: 'finding', finding })
         }
 
-        emit({ type: 'step', text: `Assessment complete — ${count} finding${count === 1 ? '' : 's'}.` })
+        emit({ type: 'step', text: `Assessment complete — ${count} clause${count === 1 ? '' : 's'} assessed, ${flagged} flagged for review.` })
         emit({ type: 'done', assessment_id: assessmentId })
       } catch (err) {
         console.error('[generate] Unexpected error:', err)

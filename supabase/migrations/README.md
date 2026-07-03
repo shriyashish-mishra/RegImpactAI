@@ -10,6 +10,7 @@ Apply in numeric order via the Supabase SQL Editor:
 0005_create_questions.sql
 0006_add_verified_to_finding_citations.sql
 0007_disable_rls.sql
+0008_add_finding_classification_and_evidence.sql
 ```
 
 These tables are everything the vertical slice (Synthesize → Discovery →
@@ -37,6 +38,14 @@ it by default on every table, but this app's anon-key-does-everything
 design predates that default and has no RLS policies defined. If a fresh
 project reports `42501: row-level security policy` errors on insert, this
 migration is why it's needed.
+
+`findings.classification` (0008) distinguishes compliant / non-compliant /
+potential-gap / info-required — the model now assesses and classifies
+every clause it's given, not just clauses it flags as a problem. Existing
+rows default to `potential_gap` since every finding written before this
+migration was, by construction, a gap. `confidence_reasoning`,
+`evidence_found`, `evidence_missing`, and `inference_made` (also 0008) make
+the model's reasoning explicit rather than just a confidence label.
 
 Schema matches `lib/types.ts` exactly as it exists in this repo today:
 `findings` has no `run_id` column, and `recommendations` has no `status`

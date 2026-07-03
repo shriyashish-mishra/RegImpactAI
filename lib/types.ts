@@ -37,11 +37,15 @@ export type ProductElement = {
 
 export type TriggerStatus = 'triggered' | 'not_triggered' | 'not_applicable'
 
+// signals is client-side only (part of DraftModel/ConfirmedModel), never
+// persisted — it exists to make "why does this area apply" transparent on
+// the Mirror screen, not just a single reason sentence.
 export type TriggeredArea = {
   area_code: string
   area_name: string
   status:    TriggerStatus
   reason:    string
+  signals:   string[]
 }
 
 // What the model returns from synthesis — no DB identity yet.
@@ -130,6 +134,19 @@ export type FindingCitation = {
 
 export type FindingSeverity = 'high' | 'medium' | 'low'
 
+// classification separates "confirmed non-compliant" from "we don't have
+// enough information to say" from "this is fine" — the model is required
+// to classify every clause it's given, not just report gaps. Without this,
+// a report can only ever show problems, which reads as untrustworthy (an
+// assessment that never confirms anything as compliant looks incomplete,
+// not thorough) and makes an aggregate compliance score impossible to
+// compute (see app/case-study and the executive summary on the report).
+export type FindingClassification =
+  | 'compliant'
+  | 'non_compliant'
+  | 'potential_gap'
+  | 'info_required'
+
 export type Finding = {
   id:                   string
   assessment_id:        string
@@ -139,9 +156,14 @@ export type Finding = {
   what_found:           string
   why_matters:          string
   severity:             FindingSeverity
+  classification:       FindingClassification
   confidence:           ConfidenceLevel
+  confidence_reasoning: string
   driver_clarity:       ConfidenceLevel
   driver_understanding: ConfidenceLevel
+  evidence_found:       string[]
+  evidence_missing:     string[]
+  inference_made:       string
   impacts:              FindingImpact[]
   citations:            FindingCitation[]
   recommendations:      string[]
@@ -206,9 +228,14 @@ export type FindingRow = {
   what_found:           string
   why_matters:          string
   severity:             FindingSeverity
+  classification:       FindingClassification
   confidence:           ConfidenceLevel
+  confidence_reasoning: string
   driver_clarity:       ConfidenceLevel
   driver_understanding: ConfidenceLevel
+  evidence_found:       string[]
+  evidence_missing:     string[]
+  inference_made:       string
 }
 
 export type FindingImpactRow = {
