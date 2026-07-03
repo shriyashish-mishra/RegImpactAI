@@ -64,6 +64,17 @@ export type SynthesisResponse = {
   model:         DraftModel
 }
 
+// Returned by any Gemini-calling route (synthesize/questions/generate) with
+// HTTP 429 when the daily quota (lib/quota.ts) is exhausted. Client code
+// checks `error === 'quota_exceeded'` to show QuotaExceededScreen instead of
+// a generic error — see components/primitives/QuotaExceededScreen.tsx.
+export type QuotaExceededResponse = {
+  error:    'quota_exceeded'
+  used:     number
+  limit:    number
+  resetAt:  string
+}
+
 // What the client sends to /api/questions and /api/generate.
 // narration stripped; assessment_id promoted to top level.
 export type ConfirmedModel = {

@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react'
 import NarratedProgress from '@/components/primitives/NarratedProgress'
 import FindingCard from '@/components/report/FindingCard'
+import QuotaExceededScreen from '@/components/primitives/QuotaExceededScreen'
 import { readLines, parseStreamLine } from '@/lib/stream'
 import { sortByPriority } from '@/lib/report/executiveSummary'
-import type { ConfirmedModel, Question, Finding } from '@/lib/types'
+import type { ConfirmedModel, Question, Finding, QuotaExceededResponse } from '@/lib/types'
 
 type Props = {
   confirmedModel: ConfirmedModel
@@ -18,6 +19,7 @@ type State =
   | { phase: 'generating'; steps: string[]; findings: Finding[] }
   | { phase: 'complete';   steps: string[]; findings: Finding[] }
   | { phase: 'error';      steps: string[]; findings: Finding[]; message: string }
+  | { phase: 'quota_exceeded'; resetAt: string }
 
 export default function GeneratingScreen({ confirmedModel, questions, assessmentId, onComplete }: Props) {
   const [state, setState] = useState<State>({ phase: 'generating', steps: [], findings: [] })
@@ -38,6 +40,10 @@ export default function GeneratingScreen({ confirmedModel, questions, assessment
 
       if (!res.ok || !res.body) {
         const data = await res.json().catch(() => null)
+        if (res.status === 429 && data?.error === 'quota_exceeded') {
+          setState({ phase: 'quota_exceeded', resetAt: (data as QuotaExceededResponse).resetAt })
+          return
+        }
         throw new Error(data?.error ?? 'Failed to generate assessment')
       }
 
@@ -68,6 +74,10 @@ export default function GeneratingScreen({ confirmedModel, questions, assessment
         message: err instanceof Error ? err.message : 'Something went wrong. Please try again.',
       })
     }
+  }
+
+  if (state.phase === 'quota_exceeded') {
+    return <QuotaExceededScreen resetAt={state.resetAt} />
   }
 
   const flaggedCount = state.findings.filter(f => f.classification !== 'compliant').length

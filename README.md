@@ -79,6 +79,11 @@ SUPABASE_ANON_KEY=
 # Required only for /admin (report history) — pick your own value
 ADMIN_PASSWORD=
 
+# Hard cost-protection cap: total Gemini calls allowed per day, shared
+# across /api/synthesize, /api/questions, and /api/generate combined.
+# Defaults to 18 if unset.
+MAX_DAILY_ASSESSMENTS=
+
 # Optional — both default to the real production values if unset
 NEXT_PUBLIC_SITE_URL=
 NEXT_PUBLIC_GITHUB_URL=
@@ -89,6 +94,14 @@ only talks to Supabase from the server, so the browser-exposure prefix
 isn't needed. These are also exactly the names Vercel's Supabase
 integration provisions automatically if you connect a project via the
 Vercel dashboard instead of setting them by hand.
+
+RegImpact protects itself from unexpected API cost: once
+`MAX_DAILY_ASSESSMENTS` Gemini calls have been made today, every
+Gemini-calling route refuses the request before calling Gemini at all, and
+the UI shows a dedicated "capacity reached" screen with a live countdown to
+the next reset instead of a raw error. Usage is tracked in Supabase
+(`daily_usage` table), not in memory, so it survives deployments and
+resets automatically every 24 hours. See `/admin` for live usage.
 
 Then apply the SQL migrations in `supabase/migrations/` (in order) via the Supabase SQL Editor —
 see `supabase/migrations/README.md`.

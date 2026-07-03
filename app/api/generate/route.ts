@@ -6,7 +6,8 @@ import { getClausesByAreaCode, getClauseById } from '@/lib/corpus'
 import { buildGenerateSystemPrompt, buildGenerateUserPrompt } from '@/lib/prompts/generate'
 import { encodeStreamLine } from '@/lib/stream'
 import { requireEnv } from '@/lib/env'
-import type { ConfirmedModel, Question, Finding, GenerateStreamEvent } from '@/lib/types'
+import { checkAndIncrementDailyQuota } from '@/lib/quota'
+import type { ConfirmedModel, Question, Finding, GenerateStreamEvent, QuotaExceededResponse } from '@/lib/types'
 
 // Phase 1 made every finding much richer (classification, confidence
 // reasoning, evidence found/missing, inference) and the model now produces
@@ -94,6 +95,15 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error('[generate]', err)
     return Response.json({ error: 'Server misconfigured: missing Supabase environment variables' }, { status: 500 })
+  }
+
+  // Checked before the stream opens — this is a plain JSON response, not a
+  // stream, so the client's existing `!res.ok` handling picks it up the same
+  // way it already handles other pre-stream errors below.
+  const quota = await checkAndIncrementDailyQuota(supabase)
+  if (!quota.allowed) {
+    const response: QuotaExceededResponse = { error: 'quota_exceeded', used: quota.used, limit: quota.limit, resetAt: quota.resetAt }
+    return Response.json(response, { status: 429 })
   }
 
   const stream = new ReadableStream<Uint8Array>({

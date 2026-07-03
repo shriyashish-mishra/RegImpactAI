@@ -4,7 +4,8 @@ import { z } from 'zod'
 import { buildQuestionsSystemPrompt, buildQuestionsUserPrompt } from '@/lib/prompts/questions'
 import { requireEnv } from '@/lib/env'
 import { createServerClient } from '@/lib/supabase/server'
-import type { ConfirmedModel, Question, QuestionsResponse } from '@/lib/types'
+import { checkAndIncrementDailyQuota } from '@/lib/quota'
+import type { ConfirmedModel, Question, QuestionsResponse, QuotaExceededResponse } from '@/lib/types'
 
 export const maxDuration = 30
 
@@ -45,6 +46,20 @@ export async function POST(req: Request) {
     return Response.json({ error: 'Server misconfigured: missing GOOGLE_GENERATIVE_AI_API_KEY' }, { status: 500 })
   }
 
+  let supabase: ReturnType<typeof createServerClient>
+  try {
+    supabase = createServerClient()
+  } catch (err) {
+    console.error('[questions]', err)
+    return Response.json({ error: 'Server misconfigured: missing Supabase environment variables' }, { status: 500 })
+  }
+
+  const quota = await checkAndIncrementDailyQuota(supabase)
+  if (!quota.allowed) {
+    const response: QuotaExceededResponse = { error: 'quota_exceeded', used: quota.used, limit: quota.limit, resetAt: quota.resetAt }
+    return Response.json(response, { status: 429 })
+  }
+
   let questionsModel: z.infer<typeof QuestionsModelSchema>
   try {
     const result = await generateObject({
@@ -69,7 +84,6 @@ export async function POST(req: Request) {
   // it just won't survive a refresh for this assessment.
   let questions: Question[]
   try {
-    const supabase = createServerClient()
     const { data: rows, error } = await supabase
       .from('questions')
       .insert(

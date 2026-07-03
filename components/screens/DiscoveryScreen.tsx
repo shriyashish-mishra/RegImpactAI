@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { Button }   from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import type { ConfirmedModel, Question, QuestionsResponse } from '@/lib/types'
+import QuotaExceededScreen from '@/components/primitives/QuotaExceededScreen'
+import type { ConfirmedModel, Question, QuestionsResponse, QuotaExceededResponse } from '@/lib/types'
 
 type Props = {
   confirmedModel: ConfirmedModel
@@ -15,6 +16,7 @@ export default function DiscoveryScreen({ confirmedModel, onComplete }: Props) {
   const [fetching, setFetching]   = useState(true)
   const [loading, setLoading]     = useState(false)
   const [error, setError]         = useState<string | null>(null)
+  const [quotaExceeded, setQuotaExceeded] = useState<QuotaExceededResponse | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -29,6 +31,12 @@ export default function DiscoveryScreen({ confirmedModel, onComplete }: Props) {
           body: JSON.stringify({ confirmedModel }),
         })
         const data = await res.json()
+
+        if (res.status === 429 && data?.error === 'quota_exceeded') {
+          if (!cancelled) setQuotaExceeded(data as QuotaExceededResponse)
+          return
+        }
+
         if (!res.ok) throw new Error(data?.error ?? 'Failed to generate questions')
         if (!cancelled) setQuestions((data as QuestionsResponse).questions)
       } catch (err) {
@@ -43,6 +51,10 @@ export default function DiscoveryScreen({ confirmedModel, onComplete }: Props) {
     fetchQuestions()
     return () => { cancelled = true }
   }, [confirmedModel])
+
+  if (quotaExceeded) {
+    return <QuotaExceededScreen resetAt={quotaExceeded.resetAt} />
+  }
 
   const activeIndex = questions.findIndex(q => q.answer === null)
   const allAnswered = questions.length > 0 && activeIndex === -1

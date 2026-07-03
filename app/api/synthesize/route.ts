@@ -4,7 +4,8 @@ import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
 import { buildSynthesizeSystemPrompt, buildSynthesizeUserPrompt } from '@/lib/prompts/synthesize'
 import { requireEnv } from '@/lib/env'
-import type { SynthesisResponse } from '@/lib/types'
+import { checkAndIncrementDailyQuota } from '@/lib/quota'
+import type { SynthesisResponse, QuotaExceededResponse } from '@/lib/types'
 
 export const maxDuration = 60
 
@@ -55,6 +56,22 @@ export async function POST(req: Request) {
     return Response.json({ error: 'Server misconfigured: missing GOOGLE_GENERATIVE_AI_API_KEY' }, { status: 500 })
   }
 
+  let supabase: ReturnType<typeof createServerClient>
+  try {
+    supabase = createServerClient()
+  } catch (err) {
+    console.error('[synthesize]', err)
+    return Response.json({ error: 'Server misconfigured: missing Supabase environment variables' }, { status: 500 })
+  }
+
+  // Checked and consumed before the Gemini call, never after — a rejected
+  // request must never reach Gemini. See lib/quota.ts.
+  const quota = await checkAndIncrementDailyQuota(supabase)
+  if (!quota.allowed) {
+    const response: QuotaExceededResponse = { error: 'quota_exceeded', used: quota.used, limit: quota.limit, resetAt: quota.resetAt }
+    return Response.json(response, { status: 429 })
+  }
+
   let model: z.infer<typeof DraftModelSchema>
   try {
     const result = await generateObject({
@@ -72,14 +89,6 @@ export async function POST(req: Request) {
     }
     console.error('[synthesize] Gemini call failed:', err)
     return Response.json({ error: 'Failed to analyse product description' }, { status: 502 })
-  }
-
-  let supabase: ReturnType<typeof createServerClient>
-  try {
-    supabase = createServerClient()
-  } catch (err) {
-    console.error('[synthesize]', err)
-    return Response.json({ error: 'Server misconfigured: missing Supabase environment variables' }, { status: 500 })
   }
 
   const { data: inserted, error: dbError } = await supabase

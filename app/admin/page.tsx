@@ -5,6 +5,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { createServerClient } from '@/lib/supabase/server'
+import { getDailyQuotaStatus } from '@/lib/quota'
 import AdminLogoutButton from '@/components/admin/AdminLogoutButton'
 
 export const metadata: Metadata = {
@@ -26,12 +27,16 @@ type AssessmentListRow = {
 
 export default async function AdminPage() {
   const supabase = createServerClient()
-  const { data, error } = await supabase
-    .from('assessments')
-    .select('id, product_name, description, created_at, findings(count)')
-    .order('created_at', { ascending: false })
+  const [{ data, error }, quota] = await Promise.all([
+    supabase
+      .from('assessments')
+      .select('id, product_name, description, created_at, findings(count)')
+      .order('created_at', { ascending: false }),
+    getDailyQuotaStatus(supabase),
+  ])
 
   const assessments = (data ?? []) as AssessmentListRow[]
+  const remaining = Math.max(0, quota.limit - quota.used)
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -42,6 +47,32 @@ export default async function AdminPage() {
           </span>
           <AdminLogoutButton />
         </div>
+      </div>
+
+      <div className="mx-auto max-w-3xl px-6 pt-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-slate-200 border border-slate-200 rounded-lg overflow-hidden">
+          <div className="bg-white px-4 py-3 flex flex-col gap-1">
+            <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">Used today</span>
+            <span className="text-lg font-semibold text-slate-900">{quota.used}</span>
+          </div>
+          <div className="bg-white px-4 py-3 flex flex-col gap-1">
+            <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">Remaining</span>
+            <span className="text-lg font-semibold text-slate-900">{remaining}</span>
+          </div>
+          <div className="bg-white px-4 py-3 flex flex-col gap-1">
+            <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">Daily limit</span>
+            <span className="text-lg font-semibold text-slate-900">{quota.limit}</span>
+          </div>
+          <div className="bg-white px-4 py-3 flex flex-col gap-1">
+            <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">Next reset</span>
+            <span className="text-sm font-semibold text-slate-900">
+              {new Date(quota.resetAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}
+            </span>
+          </div>
+        </div>
+        <p className="text-xs text-slate-500 pt-2">
+          Counts every Gemini call across synthesize, questions, and generate combined — not just completed assessments. See MAX_DAILY_ASSESSMENTS in .env.example.
+        </p>
       </div>
 
       <div className="mx-auto max-w-3xl px-6 py-10 flex flex-col gap-4">

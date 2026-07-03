@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { Button }        from '@/components/ui/button'
 import { Textarea }      from '@/components/ui/textarea'
 import ScopeBoundaryNote from '@/components/primitives/ScopeBoundaryNote'
-import type { DraftModel, SynthesisResponse } from '@/lib/types'
+import QuotaExceededScreen from '@/components/primitives/QuotaExceededScreen'
+import type { DraftModel, SynthesisResponse, QuotaExceededResponse } from '@/lib/types'
 
 type Props = {
   onComplete: (assessmentId: string, model: DraftModel) => void
@@ -14,6 +15,7 @@ export default function SeedScreen({ onComplete }: Props) {
   const [description, setDescription] = useState('')
   const [loading, setLoading]         = useState(false)
   const [error, setError]             = useState<string | null>(null)
+  const [quotaExceeded, setQuotaExceeded] = useState<QuotaExceededResponse | null>(null)
 
   const canSubmit = description.trim().length > 30 && !loading
 
@@ -31,6 +33,11 @@ export default function SeedScreen({ onComplete }: Props) {
 
       const data = await res.json()
 
+      if (res.status === 429 && data?.error === 'quota_exceeded') {
+        setQuotaExceeded(data as QuotaExceededResponse)
+        return
+      }
+
       if (!res.ok) {
         throw new Error(data?.error ?? 'Failed to analyse product description')
       }
@@ -42,6 +49,10 @@ export default function SeedScreen({ onComplete }: Props) {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (quotaExceeded) {
+    return <QuotaExceededScreen resetAt={quotaExceeded.resetAt} />
   }
 
   return (
