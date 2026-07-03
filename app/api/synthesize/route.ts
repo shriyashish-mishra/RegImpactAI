@@ -87,7 +87,14 @@ export async function POST(req: Request) {
   }
   const model = validated.data
 
-  const supabase = createServerClient()
+  let supabase: ReturnType<typeof createServerClient>
+  try {
+    supabase = createServerClient()
+  } catch (err) {
+    console.error('[synthesize]', err)
+    return Response.json({ error: 'Server misconfigured: missing Supabase environment variables' }, { status: 500 })
+  }
+
   const { data: inserted, error: dbError } = await supabase
     .from('assessments')
     .insert({ product_name: model.product_name, description })
