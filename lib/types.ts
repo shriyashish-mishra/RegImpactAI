@@ -44,7 +44,7 @@ export type TriggeredArea = {
   reason:    string
 }
 
-// What Claude returns from synthesis — no DB identity yet.
+// What the model returns from synthesis — no DB identity yet.
 // narration[] is displayed during streaming, then discarded.
 export type DraftModel = {
   product_name:    string

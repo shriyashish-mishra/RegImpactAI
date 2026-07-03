@@ -3,7 +3,7 @@
  *
  * Scope note: the corpus (lib/corpus.ts) has clauses for two regulatory
  * areas — DLG (Digital Lending Guidelines) and KYC_AML. The system prompt
- * still asks Claude to consider PPI too so the Mirror screen's "regulations
+ * still asks the model to consider PPI too so the Mirror screen's "regulations
  * in scope" section reads like a real first-pass review (showing what was
  * checked and ruled out, not just what matched) — but only DLG and KYC_AML
  * can ever produce findings later, since those are the only areas with

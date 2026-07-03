@@ -14,8 +14,8 @@ export const metadata: Metadata = {
 
 const WORKFLOW = [
   { step: 'Describe',   detail: 'The user describes their fintech product in plain language — no forms, no checkboxes.' },
-  { step: 'Understand', detail: "Claude infers a product model (activities, features, journeys) and which RBI regulatory areas are triggered, then mirrors that understanding back for the user to confirm or correct." },
-  { step: 'Discover',   detail: 'Once confirmed, Claude asks only the 3–5 clarifying questions that materially change the compliance answer — not a generic intake form.' },
+  { step: 'Understand', detail: "Gemini infers a product model (activities, features, journeys) and which RBI regulatory areas are triggered, then mirrors that understanding back for the user to confirm or correct." },
+  { step: 'Discover',   detail: 'Once confirmed, Gemini asks only the 3–5 clarifying questions that materially change the compliance answer — not a generic intake form.' },
   { step: 'Assess',     detail: 'The confirmed model, discovery answers, and the relevant regulatory clauses are tested against each other to produce findings, streamed live to the UI as they\'re produced.' },
   { step: 'Report',     detail: 'Every finding is persisted with its citation, impact breakdown, and recommendations, and rendered as a shareable report.' },
 ]
@@ -24,7 +24,7 @@ const STACK = [
   'Next.js (App Router) + React + TypeScript',
   'Tailwind CSS',
   'Supabase (Postgres)',
-  'Anthropic Claude, via the Vercel AI SDK',
+  'Google Gemini, via the Vercel AI SDK',
   'Zod for schema validation at every AI boundary',
 ]
 

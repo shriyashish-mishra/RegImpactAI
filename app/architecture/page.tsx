@@ -13,9 +13,9 @@ export const metadata: Metadata = {
 }
 
 const PIPELINE = [
-  { step: 'Describe',   route: 'POST /api/synthesize', detail: "Takes a free-text product description, calls Claude to infer a product model and which regulatory areas are triggered, and creates the assessment row in Postgres." },
+  { step: 'Describe',   route: 'POST /api/synthesize', detail: "Takes a free-text product description, calls Gemini to infer a product model and which regulatory areas are triggered, and creates the assessment row in Postgres." },
   { step: 'Understand', route: '(client-only)',         detail: 'The inferred model is mirrored back to the user for confirmation. No network call — confirming just relabels the client-side model.' },
-  { step: 'Discover',   route: 'POST /api/questions',   detail: 'Given the confirmed model, Claude generates 3–5 clarifying questions scoped to the regulatory areas the corpus can actually test against.' },
+  { step: 'Discover',   route: 'POST /api/questions',   detail: 'Given the confirmed model, Gemini generates 3–5 clarifying questions scoped to the regulatory areas the corpus can actually test against.' },
   { step: 'Assess',     route: 'POST /api/generate',    detail: 'Tests the confirmed model and discovery answers against the relevant corpus clauses, persists each finding (with its impacts, citations, and recommendations), and streams progress back to the client.' },
   { step: 'Report',     route: 'GET /report/[id]',      detail: 'A server component reads the assessment and its findings from Postgres and renders the full report.' },
 ]
@@ -43,7 +43,7 @@ export default function ArchitecturePage() {
             How it&apos;s built
           </h1>
           <p className="text-sm text-slate-500 leading-relaxed">
-            Next.js App Router on the frontend, three Claude-calling API routes in the middle,
+            Next.js App Router on the frontend, three Gemini-calling API routes in the middle,
             Supabase (Postgres) for persistence. No custom backend service — the route handlers
             are the backend.
           </p>

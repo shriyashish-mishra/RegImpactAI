@@ -1,4 +1,4 @@
-import { anthropic } from '@ai-sdk/anthropic'
+import { google } from '@ai-sdk/google'
 import { streamText, Output } from 'ai'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
@@ -50,7 +50,7 @@ const FindingSchema = z.object({
   recommendations: z.array(z.string().min(1)).min(1),
 })
 
-/** Only these areas have clauses in the corpus — the only ones worth calling Claude for. */
+/** Only these areas have clauses in the corpus — the only ones worth calling the model for. */
 const ASSESSABLE_AREA_CODES = ['DLG', 'KYC_AML']
 
 export async function POST(req: Request) {
@@ -70,10 +70,10 @@ export async function POST(req: Request) {
   const assessmentId = confirmedModel.assessment_id
 
   try {
-    requireEnv('ANTHROPIC_API_KEY')
+    requireEnv('GOOGLE_GENERATIVE_AI_API_KEY')
   } catch (err) {
     console.error('[generate]', err)
-    return Response.json({ error: 'Server misconfigured: missing ANTHROPIC_API_KEY' }, { status: 500 })
+    return Response.json({ error: 'Server misconfigured: missing GOOGLE_GENERATIVE_AI_API_KEY' }, { status: 500 })
   }
 
   const clauses = ASSESSABLE_AREA_CODES.flatMap(getClausesByAreaCode)
@@ -97,7 +97,7 @@ export async function POST(req: Request) {
         emit({ type: 'step', text: `Testing ${ASSESSABLE_AREA_CODES.join(' + ')} clauses against ${confirmedModel.product_name}…` })
 
         const result = streamText({
-          model: anthropic('claude-sonnet-4-6'),
+          model: google('gemini-2.5-flash'),
           system: buildGenerateSystemPrompt(),
           prompt: buildGenerateUserPrompt(confirmedModel, questions, clauses),
           temperature: 0.4,

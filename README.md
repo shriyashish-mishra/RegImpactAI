@@ -35,7 +35,7 @@ This project focuses on trust. Every compliance finding is backed by verified re
 * TypeScript
 * Tailwind CSS
 * Supabase
-* Anthropic Claude API
+* Google Gemini API
 * Vercel
 
 ## AI Workflow
@@ -69,7 +69,7 @@ npm run dev
 Create a `.env.local` file containing:
 
 ```text
-ANTHROPIC_API_KEY=
+GOOGLE_GENERATIVE_AI_API_KEY=
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 

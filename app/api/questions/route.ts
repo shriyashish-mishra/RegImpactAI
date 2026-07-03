@@ -1,4 +1,4 @@
-import { anthropic } from '@ai-sdk/anthropic'
+import { google } from '@ai-sdk/google'
 import { generateText } from 'ai'
 import { z } from 'zod'
 import { buildQuestionsSystemPrompt, buildQuestionsUserPrompt } from '@/lib/prompts/questions'
@@ -43,23 +43,23 @@ export async function POST(req: Request) {
   const confirmedModel = parsedRequest.data.confirmedModel as ConfirmedModel
 
   try {
-    requireEnv('ANTHROPIC_API_KEY')
+    requireEnv('GOOGLE_GENERATIVE_AI_API_KEY')
   } catch (err) {
     console.error('[questions]', err)
-    return Response.json({ error: 'Server misconfigured: missing ANTHROPIC_API_KEY' }, { status: 500 })
+    return Response.json({ error: 'Server misconfigured: missing GOOGLE_GENERATIVE_AI_API_KEY' }, { status: 500 })
   }
 
   let rawText: string
   try {
     const result = await generateText({
-      model: anthropic('claude-sonnet-4-6'),
+      model: google('gemini-2.5-flash'),
       system: buildQuestionsSystemPrompt(),
       prompt: buildQuestionsUserPrompt(confirmedModel),
       temperature: 0.4,
     })
     rawText = result.text
   } catch (err) {
-    console.error('[questions] Claude call failed:', err)
+    console.error('[questions] Gemini call failed:', err)
     return Response.json({ error: 'Failed to generate questions' }, { status: 502 })
   }
 

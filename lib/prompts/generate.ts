@@ -3,7 +3,7 @@ import type { ConfirmedModel, Question, CorpusClause } from '@/lib/types'
 /**
  * Prompt builders for /api/generate.
  *
- * Called once per call to Claude — this milestone calls it once for the
+ * Called once per call to the model — this milestone calls it once for the
  * one area with corpus clauses (DLG), passing every DLG clause it has.
  * Recommendations are produced as plain strings, matching Finding.recommendations:
  * string[] exactly as it exists in lib/types.ts today.
