@@ -14,7 +14,7 @@ export default function AdminLogoutButton() {
   return (
     <button
       onClick={handleLogout}
-      className="text-xs text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors"
+      className="text-xs text-subtle hover:text-foreground underline underline-offset-2 transition-colors"
     >
       Sign out
     </button>

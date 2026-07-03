@@ -39,10 +39,10 @@ export default async function AdminPage() {
   const remaining = Math.max(0, quota.limit - quota.used)
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="border-b border-slate-200 bg-white">
+    <div className="min-h-screen bg-background">
+      <div className="border-b border-border bg-surface">
         <div className="mx-auto max-w-3xl px-6 py-4 flex items-center justify-between">
-          <span className="text-sm font-semibold text-slate-900 tracking-tight">
+          <span className="text-sm font-semibold text-foreground tracking-tight">
             Report history
           </span>
           <AdminLogoutButton />
@@ -50,57 +50,57 @@ export default async function AdminPage() {
       </div>
 
       <div className="mx-auto max-w-3xl px-6 pt-8">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-slate-200 border border-slate-200 rounded-lg overflow-hidden">
-          <div className="bg-white px-4 py-3 flex flex-col gap-1">
-            <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">Used today</span>
-            <span className="text-lg font-semibold text-slate-900">{quota.used}</span>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border border border-border rounded-lg overflow-hidden">
+          <div className="bg-surface px-4 py-3 flex flex-col gap-1">
+            <span className="font-mono text-[11px] font-medium text-subtle uppercase tracking-wide">Used today</span>
+            <span className="text-lg font-semibold text-foreground">{quota.used}</span>
           </div>
-          <div className="bg-white px-4 py-3 flex flex-col gap-1">
-            <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">Remaining</span>
-            <span className="text-lg font-semibold text-slate-900">{remaining}</span>
+          <div className="bg-surface px-4 py-3 flex flex-col gap-1">
+            <span className="font-mono text-[11px] font-medium text-subtle uppercase tracking-wide">Remaining</span>
+            <span className="text-lg font-semibold text-accent">{remaining}</span>
           </div>
-          <div className="bg-white px-4 py-3 flex flex-col gap-1">
-            <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">Daily limit</span>
-            <span className="text-lg font-semibold text-slate-900">{quota.limit}</span>
+          <div className="bg-surface px-4 py-3 flex flex-col gap-1">
+            <span className="font-mono text-[11px] font-medium text-subtle uppercase tracking-wide">Daily limit</span>
+            <span className="text-lg font-semibold text-foreground">{quota.limit}</span>
           </div>
-          <div className="bg-white px-4 py-3 flex flex-col gap-1">
-            <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">Next reset</span>
-            <span className="text-sm font-semibold text-slate-900">
+          <div className="bg-surface px-4 py-3 flex flex-col gap-1">
+            <span className="font-mono text-[11px] font-medium text-subtle uppercase tracking-wide">Next reset</span>
+            <span className="text-sm font-semibold text-foreground">
               {new Date(quota.resetAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}
             </span>
           </div>
         </div>
-        <p className="text-xs text-slate-500 pt-2">
+        <p className="text-xs text-subtle pt-2">
           Counts every Gemini call across synthesize, questions, and generate combined — not just completed assessments. See MAX_DAILY_ASSESSMENTS in .env.example.
         </p>
       </div>
 
       <div className="mx-auto max-w-3xl px-6 py-10 flex flex-col gap-4">
         {error && (
-          <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-4 py-3">
+          <p className="text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-md px-4 py-3">
             Failed to load assessments: {error.message}
           </p>
         )}
 
         {!error && assessments.length === 0 && (
-          <p className="text-sm text-slate-500">No assessments yet.</p>
+          <p className="text-sm text-muted">No assessments yet.</p>
         )}
 
         {assessments.map(a => (
           <Link
             key={a.id}
             href={`/report/${a.id}`}
-            className="flex items-center justify-between gap-4 px-4 py-3 bg-white border border-slate-200 rounded-lg hover:border-indigo-300 transition-colors"
+            className="flex items-center justify-between gap-4 px-4 py-3 bg-surface border border-border rounded-lg hover:border-accent transition-colors"
           >
             <div className="flex flex-col gap-0.5 min-w-0">
-              <span className="text-sm font-medium text-slate-800 truncate">{a.product_name}</span>
-              <span className="text-xs text-slate-400 truncate">{a.description}</span>
+              <span className="text-sm font-medium text-foreground truncate">{a.product_name}</span>
+              <span className="text-xs text-subtle truncate">{a.description}</span>
             </div>
             <div className="flex items-center gap-3 shrink-0">
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-muted">
                 {a.findings?.[0]?.count ?? 0} finding{(a.findings?.[0]?.count ?? 0) === 1 ? '' : 's'}
               </span>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-subtle">
                 {new Date(a.created_at).toLocaleDateString()}
               </span>
             </div>
