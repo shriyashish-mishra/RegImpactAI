@@ -1,5 +1,5 @@
 import { google } from '@ai-sdk/google'
-import { generateText } from 'ai'
+import { generateObject, NoObjectGeneratedError } from 'ai'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
 import { buildSynthesizeSystemPrompt, buildSynthesizeUserPrompt } from '@/lib/prompts/synthesize'
@@ -31,10 +31,6 @@ const DraftModelSchema = z.object({
   })),
 })
 
-function stripCodeFence(text: string): string {
-  return text.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '')
-}
-
 export async function POST(req: Request) {
   let body: unknown
   try {
@@ -59,34 +55,24 @@ export async function POST(req: Request) {
     return Response.json({ error: 'Server misconfigured: missing GOOGLE_GENERATIVE_AI_API_KEY' }, { status: 500 })
   }
 
-  let rawText: string
+  let model: z.infer<typeof DraftModelSchema>
   try {
-    const result = await generateText({
+    const result = await generateObject({
       model: google('gemini-2.5-flash'),
+      schema: DraftModelSchema,
       system: buildSynthesizeSystemPrompt(),
       prompt: buildSynthesizeUserPrompt(description),
       temperature: 0.4,
     })
-    rawText = result.text
+    model = result.object
   } catch (err) {
+    if (NoObjectGeneratedError.isInstance(err)) {
+      console.error('[synthesize] Model output failed schema validation:', err.cause)
+      return Response.json({ error: 'Model returned an unexpected shape' }, { status: 502 })
+    }
     console.error('[synthesize] Gemini call failed:', err)
     return Response.json({ error: 'Failed to analyse product description' }, { status: 502 })
   }
-
-  let parsedModel: unknown
-  try {
-    parsedModel = JSON.parse(stripCodeFence(rawText))
-  } catch {
-    console.error('[synthesize] Failed to parse model JSON:', rawText)
-    return Response.json({ error: 'Failed to parse model response' }, { status: 502 })
-  }
-
-  const validated = DraftModelSchema.safeParse(parsedModel)
-  if (!validated.success) {
-    console.error('[synthesize] Model output failed validation:', validated.error.issues)
-    return Response.json({ error: 'Model returned an unexpected shape' }, { status: 502 })
-  }
-  const model = validated.data
 
   let supabase: ReturnType<typeof createServerClient>
   try {

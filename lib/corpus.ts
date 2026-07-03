@@ -1,9 +1,13 @@
 import type { CorpusClause } from '@/lib/types'
 
 /**
- * The skeleton's regulatory corpus.
- * IDs are stable UUIDs used as primary keys when seeding corpus_clauses in Postgres.
- * Replaced by pgvector + full corpus in the real MVP.
+ * The regulatory corpus this app tests products against — lives in code, not
+ * Postgres, by design (see supabase/migrations/README.md: there is no
+ * corpus_clauses table). IDs are stable UUIDs so a finding's citation can
+ * join back to the exact clause it came from. At 19 clauses total, a flat
+ * filter is the retrieval step (see getClausesByAreaCode below) — see
+ * /architecture for why that's a deliberate choice at this scale, not a
+ * placeholder awaiting a vector database.
  *
  * DLG clauses (verified: true): RBI Digital Lending Guidelines, September 2022.
  * Verbatim excerpts — accuracy matters because they appear as citations.
@@ -178,8 +182,8 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
 
 /**
  * Returns clauses for a given regulatory area.
- * The skeleton's only "retrieval" — a simple filter.
- * Replaced by pgvector hybrid retrieval in the real MVP.
+ * This app's only "retrieval" step — a direct filter, no ranking or
+ * relevance scoring. See the file header above and /architecture for why.
  */
 export function getClausesByAreaCode(areaCode: string): CorpusClause[] {
   return CORPUS_CLAUSES.filter(c => c.area_code === areaCode)

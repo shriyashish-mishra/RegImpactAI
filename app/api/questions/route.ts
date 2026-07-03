@@ -1,5 +1,5 @@
 import { google } from '@ai-sdk/google'
-import { generateText } from 'ai'
+import { generateObject, NoObjectGeneratedError } from 'ai'
 import { z } from 'zod'
 import { buildQuestionsSystemPrompt, buildQuestionsUserPrompt } from '@/lib/prompts/questions'
 import { requireEnv } from '@/lib/env'
@@ -24,10 +24,6 @@ const QuestionsModelSchema = z.object({
   })).min(1),
 })
 
-function stripCodeFence(text: string): string {
-  return text.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '')
-}
-
 export async function POST(req: Request) {
   let body: unknown
   try {
@@ -49,32 +45,23 @@ export async function POST(req: Request) {
     return Response.json({ error: 'Server misconfigured: missing GOOGLE_GENERATIVE_AI_API_KEY' }, { status: 500 })
   }
 
-  let rawText: string
+  let questionsModel: z.infer<typeof QuestionsModelSchema>
   try {
-    const result = await generateText({
+    const result = await generateObject({
       model: google('gemini-2.5-flash'),
+      schema: QuestionsModelSchema,
       system: buildQuestionsSystemPrompt(),
       prompt: buildQuestionsUserPrompt(confirmedModel),
       temperature: 0.4,
     })
-    rawText = result.text
+    questionsModel = result.object
   } catch (err) {
+    if (NoObjectGeneratedError.isInstance(err)) {
+      console.error('[questions] Model output failed schema validation:', err.cause)
+      return Response.json({ error: 'Model returned an unexpected shape' }, { status: 502 })
+    }
     console.error('[questions] Gemini call failed:', err)
     return Response.json({ error: 'Failed to generate questions' }, { status: 502 })
-  }
-
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(stripCodeFence(rawText))
-  } catch {
-    console.error('[questions] Failed to parse model JSON:', rawText)
-    return Response.json({ error: 'Failed to parse model response' }, { status: 502 })
-  }
-
-  const validated = QuestionsModelSchema.safeParse(parsed)
-  if (!validated.success) {
-    console.error('[questions] Model output failed validation:', validated.error.issues)
-    return Response.json({ error: 'Model returned an unexpected shape' }, { status: 502 })
   }
 
   // Persist so a mid-flow refresh doesn't silently drop an answered question.
@@ -86,7 +73,7 @@ export async function POST(req: Request) {
     const { data: rows, error } = await supabase
       .from('questions')
       .insert(
-        validated.data.questions.map((q, i) => ({
+        questionsModel.questions.map((q, i) => ({
           assessment_id: confirmedModel.assessment_id,
           seq: i + 1,
           prompt: q.prompt,
@@ -101,7 +88,7 @@ export async function POST(req: Request) {
     questions = rows as Question[]
   } catch (err) {
     console.error('[questions] Failed to persist questions, continuing without persistence:', err)
-    questions = validated.data.questions.map((q, i) => ({
+    questions = questionsModel.questions.map((q, i) => ({
       id: crypto.randomUUID(),
       seq: i + 1,
       prompt: q.prompt,
