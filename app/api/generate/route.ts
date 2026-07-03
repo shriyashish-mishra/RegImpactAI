@@ -8,7 +8,14 @@ import { encodeStreamLine } from '@/lib/stream'
 import { requireEnv } from '@/lib/env'
 import type { ConfirmedModel, Question, Finding, GenerateStreamEvent } from '@/lib/types'
 
-export const maxDuration = 60
+// Phase 1 made every finding much richer (classification, confidence
+// reasoning, evidence found/missing, inference) and the model now produces
+// one for every clause in scope (19 today), not just gaps — a real live
+// run measured just over 60s and got cut off mid-stream. Vercel's Hobby
+// plan allows up to 300s (confirmed against current docs, not memory —
+// this used to be capped much lower); 180s leaves real margin without
+// maxing out the platform ceiling for no reason.
+export const maxDuration = 180
 
 const RequestSchema = z.object({
   confirmedModel: z.object({
