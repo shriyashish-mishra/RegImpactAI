@@ -43,8 +43,8 @@ const LAYERS = [
   },
   {
     name: 'Citation Verification',
-    what: 'Every citation\'s "verified" flag is resolved server-side against the trusted corpus — never taken from the model\'s own output.',
-    why: 'A model can misquote or paraphrase confidently. The verification step means a citation can\'t inherit trust it hasn\'t earned, no matter how the model presents it.',
+    what: 'Every citation\'s verified flag, document version, publication date, and issuing authority are all resolved server-side against the Regulatory Knowledge Base — never taken from the model\'s own output.',
+    why: 'A model can misquote or paraphrase confidently. Resolving this server-side means a citation can\'t inherit trust — or metadata — it hasn\'t earned, no matter how the model presents it.',
   },
   {
     name: 'Assessment Engine',
@@ -71,9 +71,11 @@ const TABLES = [
   { name: 'questions',          detail: 'Discovery Q&A per assessment, persisted as answered.' },
   { name: 'findings',           detail: 'One row per clause tested — classification, confidence, evidence found/missing.' },
   { name: 'finding_impacts',    detail: 'Product / UI / engineering / business impact statements.' },
-  { name: 'finding_citations',  detail: 'Source clause(s) per finding, joined by id, verified flag resolved server-side.' },
+  { name: 'finding_citations',  detail: 'Source clause(s) per finding, joined by id — verified flag, document version, publication date, and authority all resolved server-side.' },
   { name: 'recommendations',    detail: 'Ordered, actionable recommendations per finding.' },
   { name: 'daily_usage',        detail: 'One row per calendar date — the shared AI-inference quota counter.' },
+  { name: 'ai_cache',           detail: 'Stage-level cache of AI responses, keyed by normalized input hash + prompt/rule/corpus/schema version.' },
+  { name: 'ai_optimization_metrics', detail: 'One row per calendar date — cache hits/misses, rule engine decisions, token/time savings.' },
 ]
 
 export default function ArchitecturePage() {
@@ -171,12 +173,49 @@ export default function ArchitecturePage() {
           </div>
           <p className="text-xs text-subtle leading-relaxed">
             The regulatory corpus itself is not in Postgres — it&apos;s a curated array in{' '}
-            <code className="font-mono bg-surface px-1 py-0.5 rounded text-accent">lib/corpus.ts</code>, filtered by area code.
+            <code className="font-mono bg-surface px-1 py-0.5 rounded text-accent">lib/corpus.ts</code>, each clause tagged
+            to a document in the Regulatory Knowledge Base below, filtered to that document&apos;s area.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-5">
+          <SectionLabel index={5} label="Regulatory Knowledge Base" />
+          <p className="text-sm text-muted leading-relaxed max-w-2xl">
+            A regulation isn&apos;t one static file — RBI amends, clarifies, and circulars its
+            guidelines continuously. Treating &ldquo;Digital Lending Guidelines, 2022&rdquo; as a
+            single hardcoded document breaks the moment an amendment needs to be added. So the
+            corpus is organized as a Knowledge Base instead: each regulatory area (Digital Lending,
+            KYC/AML today; PPI, Payment Aggregator, Account Aggregator, NBFC, and UPI are modeled
+            as areas but have no documents behind them yet — see{' '}
+            <Link href="/knowledge-base" className="text-accent hover:underline">the Knowledge Base page</Link>) can hold
+            multiple documents — a guideline, its circulars, amendments, FAQs — and each document
+            carries real lifecycle metadata: type, version, status, publication date, issuing
+            authority, and supersession links to whatever it replaced or was replaced by.
+          </p>
+          <div className="flex flex-col gap-2">
+            {[
+              { name: 'Document Metadata', detail: 'title, authority, area, document type, publication/effective date, version, status, jurisdiction, source, last reviewed, supersedes/superseded by, verified — the same shape for any future authority, nothing RBI-specific in the type itself.' },
+              { name: 'Corpus', detail: 'every clause references a document_id, not an area directly — an area can hold several documents even though DLG and KYC/AML each have exactly one today.' },
+              { name: 'Retrieval', detail: 'filters to clauses whose document is currently active — mark a document superseded and it drops out of assessments automatically, no code change.' },
+              { name: 'Citation Verification', detail: 'every citation resolves its document\'s version, publication date, and authority server-side, alongside the existing verified flag.' },
+              { name: 'Assessment', detail: 'unchanged behavior end to end — the pipeline never needed to know this restructuring happened underneath it.' },
+            ].map(item => (
+              <div key={item.name} className="flex items-start gap-3 px-4 py-3 bg-surface border border-border rounded-lg">
+                <span className="text-sm font-medium text-foreground w-40 shrink-0">{item.name}</span>
+                <span className="text-xs text-muted leading-relaxed">{item.detail}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-subtle leading-relaxed">
+            Why this shape: it&apos;s the difference between a demo that tests one PDF and a
+            platform that can absorb regulatory evolution, keep version history instead of
+            overwriting it, stay fully traceable per citation, and extend to a new authority (SEBI,
+            IRDAI, NPCI, the DPDP Act, or a non-Indian regulator) as new data, not a redesign.
           </p>
         </section>
 
         <section className="flex flex-col gap-4">
-          <SectionLabel index={5} label="Retrieval" />
+          <SectionLabel index={6} label="Retrieval" />
           <p className="text-sm text-muted leading-relaxed max-w-2xl">
             Not embeddings-based semantic search — retrieval happens in two direct filters, no
             ranking step. First, the product&apos;s declared categories (multi-select) decide which
@@ -190,15 +229,15 @@ export default function ArchitecturePage() {
             <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">KYC_AML</code> — deduplicated (see{' '}
             <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">lib/categoryMapping.ts</code>).
             Adding a category can only ever add area codes, never remove one another selected
-            category already required. Second, every clause within those selected areas — 19 total
-            across both today — goes to the model directly. The report shows a verdict for every
-            clause actually in scope, not a curated subset an approximate retrieval step might have
-            dropped.
+            category already required. Second, within those areas, only clauses belonging to a
+            currently <strong>active</strong> document in the Knowledge Base go to the model — 19
+            clauses across two active documents today. The report shows a verdict for every clause
+            actually in scope, not a curated subset an approximate retrieval step might have dropped.
           </p>
         </section>
 
         <section className="flex flex-col gap-4">
-          <SectionLabel index={6} label="AI Inference Layer" />
+          <SectionLabel index={7} label="AI Inference Layer" />
           <p className="text-sm text-muted leading-relaxed max-w-2xl">
             Every route that needs the AI inference engine calls it through one abstraction —{' '}
             <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">lib/ai/provider.ts</code> — instead
@@ -212,7 +251,7 @@ export default function ArchitecturePage() {
         </section>
 
         <section className="flex flex-col gap-4">
-          <SectionLabel index={7} label="Cost Protection" />
+          <SectionLabel index={8} label="Cost Protection" />
           <p className="text-sm text-muted leading-relaxed max-w-2xl">
             Every AI-inference-calling route checks and atomically increments a shared daily
             counter in{' '}
@@ -227,24 +266,27 @@ export default function ArchitecturePage() {
         </section>
 
         <section className="flex flex-col gap-4">
-          <SectionLabel index={8} label="MVP Scope & Scaling Path" />
+          <SectionLabel index={9} label="MVP Scope & Scaling Path" />
           <p className="text-sm text-muted leading-relaxed max-w-2xl">
-            Two regulatory areas are live today — RBI&apos;s Digital Lending Guidelines and
-            KYC/AML — chosen deliberately, not as a shortcut. DLG is where citation-verification
-            actually gets exercised hardest (disbursal mechanics, cooling-off periods, fee rules),
-            and KYC/AML is the one obligation almost every fintech category triggers regardless of
-            what else it does. Proving the trust mechanism on these two first, end to end, matters
-            more than shipping shallow coverage across many. A product model may still show PPI as
-            &ldquo;in scope&rdquo; based on what the description implies — that&apos;s an honest
-            reflection of the product, not a claim about what&apos;s assessed. No findings are
-            generated for it, since there&apos;s no corpus behind it yet.
+            Two regulatory areas have active documents behind them today — Digital Lending
+            (the 2022 Guidelines) and KYC/AML (the 2016 Master Direction) — chosen deliberately,
+            not as a shortcut. Digital Lending is where citation-verification actually gets
+            exercised hardest (disbursal mechanics, cooling-off periods, fee rules), and KYC/AML is
+            the one obligation almost every fintech category triggers regardless of what else it
+            does. Proving the trust mechanism on these two first, end to end, matters more than
+            shipping shallow coverage across many. PPI, Payment Aggregator, Account Aggregator,
+            NBFC, and UPI already exist as areas in the Knowledge Base registry — a product model
+            may show one as &ldquo;in scope&rdquo; based on what the description implies, which is
+            an honest reflection of the product, not a claim about what&apos;s assessed. No
+            findings are generated for them; there&apos;s no document behind them yet.
           </p>
           <p className="text-sm text-muted leading-relaxed max-w-2xl">
-            Scaling to a new regulatory area is additive, not a rework: add its clauses to the
-            corpus, add one row to{' '}
-            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">lib/categoryMapping.ts</code>{' '}
-            mapping the relevant product categories to it, and it plugs into retrieval, discovery,
-            and assessment automatically — no changes to the pipeline itself. The same is true for
+            Scaling is additive at every level, not a rework: a new circular or amendment is one
+            new document in the registry, tagged with its own clauses; a new regulatory area
+            (SEBI, IRDAI, NPCI, the DPDP Act) is a new registry entry with its own authority; a new
+            product category mapping to an existing area is one row in{' '}
+            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">lib/categoryMapping.ts</code>. None
+            of it touches retrieval, discovery, or assessment logic. The same is true for
             jurisdictions: geography is already a first-class, multi-select onboarding field, ready
             for regulatory corpora beyond India.
           </p>

@@ -1,17 +1,18 @@
 import Link from 'next/link'
 import { GITHUB_URL, LINKEDIN_URL, PORTFOLIO_URL } from '@/lib/site'
 
-type NavKey = 'home' | 'live' | 'sample' | 'case-study' | 'architecture'
+type NavKey = 'home' | 'live' | 'sample' | 'case-study' | 'architecture' | 'knowledge-base'
 
 type Props = {
   current?: NavKey
 }
 
 const LINKS: { key: NavKey; href: string; label: string }[] = [
-  { key: 'live',         href: '/',             label: 'Try Live' },
-  { key: 'sample',       href: '/demo/sample',  label: 'Sample Report' },
-  { key: 'case-study',   href: '/case-study',   label: 'Case Study' },
-  { key: 'architecture', href: '/architecture', label: 'Architecture' },
+  { key: 'live',           href: '/',               label: 'Try Live' },
+  { key: 'sample',         href: '/demo/sample',    label: 'Sample Report' },
+  { key: 'case-study',     href: '/case-study',     label: 'Case Study' },
+  { key: 'architecture',   href: '/architecture',   label: 'Architecture' },
+  { key: 'knowledge-base', href: '/knowledge-base', label: 'Knowledge Base' },
 ]
 
 const EXTERNAL_LINKS = [

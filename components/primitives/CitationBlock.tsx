@@ -28,6 +28,16 @@ export default function CitationBlock({ citation }: Props) {
         &ldquo;{citation.clause_text}&rdquo;
       </p>
       <p className="text-xs text-subtle">{citation.source_title}</p>
+      {/* Absent (null) on citations persisted before the Knowledge Base
+          model existed — renders nothing extra for those, exactly as
+          before. */}
+      {(citation.document_version !== null || citation.publication_date !== null || citation.authority !== null) && (
+        <p className="text-[11px] text-subtle/80 flex flex-wrap gap-x-2">
+          {citation.authority && <span>{citation.authority}</span>}
+          {citation.document_version !== null && <span>· Version {citation.document_version}</span>}
+          {citation.publication_date && <span>· Published {citation.publication_date}</span>}
+        </p>
+      )}
     </div>
   )
 }

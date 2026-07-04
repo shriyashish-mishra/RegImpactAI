@@ -1,4 +1,5 @@
 import type { CorpusClause } from '@/lib/types'
+import { getActiveDocuments } from '@/lib/knowledgeBase/registry'
 
 /**
  * The regulatory corpus this app tests products against — lives in code, not
@@ -8,6 +9,14 @@ import type { CorpusClause } from '@/lib/types'
  * filter is the retrieval step (see getClausesByAreaCode below) — see
  * /architecture for why that's a deliberate choice at this scale, not a
  * placeholder awaiting a vector database.
+ *
+ * Every clause belongs to a document_id (lib/knowledgeBase/registry.ts),
+ * not directly to an area — an area can hold several documents (a
+ * guideline, its circulars, amendments, FAQs) even though today each of
+ * DLG and KYC_AML has exactly one. Retrieval filters to clauses whose
+ * document is currently 'active' in the registry, so adding a new document
+ * version and marking the old one 'superseded' automatically removes it
+ * from assessments without touching this file or the API routes.
  *
  * DLG clauses (verified: true): RBI Digital Lending Guidelines, September 2022.
  * Verbatim excerpts — accuracy matters because they appear as citations.
@@ -24,6 +33,7 @@ import type { CorpusClause } from '@/lib/types'
 export const CORPUS_CLAUSES: CorpusClause[] = [
   {
     id:           'a1b2c3d4-0001-0001-0001-000000000001',
+    document_id:  'doc-dlg-2022',
     area_code:    'DLG',
     clause_ref:   'DLG Para 5 (i)',
     source_title: 'RBI Digital Lending Guidelines, September 2022',
@@ -33,6 +43,7 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
   },
   {
     id:           'a1b2c3d4-0001-0001-0001-000000000002',
+    document_id:  'doc-dlg-2022',
     area_code:    'DLG',
     clause_ref:   'DLG Para 5 (ii)',
     source_title: 'RBI Digital Lending Guidelines, September 2022',
@@ -42,6 +53,7 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
   },
   {
     id:           'a1b2c3d4-0001-0001-0001-000000000003',
+    document_id:  'doc-dlg-2022',
     area_code:    'DLG',
     clause_ref:   'DLG Para 6 — Key Fact Statement',
     source_title: 'RBI Digital Lending Guidelines, September 2022',
@@ -51,6 +63,7 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
   },
   {
     id:           'a1b2c3d4-0001-0001-0001-000000000004',
+    document_id:  'doc-dlg-2022',
     area_code:    'DLG',
     clause_ref:   'DLG Para 6 — Cooling-off Period',
     source_title: 'RBI Digital Lending Guidelines, September 2022',
@@ -60,6 +73,7 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
   },
   {
     id:           'a1b2c3d4-0001-0001-0001-000000000005',
+    document_id:  'doc-dlg-2022',
     area_code:    'DLG',
     clause_ref:   'DLG Para 7 — Data Collection',
     source_title: 'RBI Digital Lending Guidelines, September 2022',
@@ -69,6 +83,7 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
   },
   {
     id:           'a1b2c3d4-0001-0001-0001-000000000006',
+    document_id:  'doc-dlg-2022',
     area_code:    'DLG',
     clause_ref:   'DLG Para 7 — Device Access',
     source_title: 'RBI Digital Lending Guidelines, September 2022',
@@ -78,6 +93,7 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
   },
   {
     id:           'a1b2c3d4-0001-0001-0001-000000000007',
+    document_id:  'doc-dlg-2022',
     area_code:    'DLG',
     clause_ref:   'DLG Para 8 — Grievance Redressal',
     source_title: 'RBI Digital Lending Guidelines, September 2022',
@@ -87,6 +103,7 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
   },
   {
     id:           'a1b2c3d4-0001-0001-0001-000000000008',
+    document_id:  'doc-dlg-2022',
     area_code:    'DLG',
     clause_ref:   'DLG Para 8 — Complaint Escalation',
     source_title: 'RBI Digital Lending Guidelines, September 2022',
@@ -96,6 +113,7 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
   },
   {
     id:           'a1b2c3d4-0001-0001-0001-000000000009',
+    document_id:  'doc-dlg-2022',
     area_code:    'DLG',
     clause_ref:   'DLG Para 9 — Recovery Guidelines',
     source_title: 'RBI Digital Lending Guidelines, September 2022',
@@ -105,6 +123,7 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
   },
   {
     id:           'a1b2c3d4-0001-0001-0001-000000000010',
+    document_id:  'doc-dlg-2022',
     area_code:    'DLG',
     clause_ref:   'DLG Para 10 — Credit Reporting',
     source_title: 'RBI Digital Lending Guidelines, September 2022',
@@ -114,6 +133,7 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
   },
   {
     id:           'a1b2c3d4-0001-0001-0001-000000000011',
+    document_id:  'doc-dlg-2022',
     area_code:    'DLG',
     clause_ref:   'DLG Para 4 — LSP Obligations',
     source_title: 'RBI Digital Lending Guidelines, September 2022',
@@ -123,6 +143,7 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
   },
   {
     id:           'a1b2c3d4-0001-0001-0001-000000000012',
+    document_id:  'doc-dlg-2022',
     area_code:    'DLG',
     clause_ref:   'DLG Para 5 (iii) — Automatic Credit Limit Increase',
     source_title: 'RBI Digital Lending Guidelines, September 2022',
@@ -136,6 +157,7 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
   // ---------------------------------------------------------------------
   {
     id:           'b2c3d4e5-0002-0002-0002-000000000001',
+    document_id:  'doc-kyc-md-2016',
     area_code:    'KYC_AML',
     clause_ref:   'KYC-MD — Customer Due Diligence at Onboarding',
     source_title: 'RBI Master Direction – Know Your Customer (KYC), 2016 (as amended) — reconstructed from general knowledge, NOT verified against current source text',
@@ -145,6 +167,7 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
   },
   {
     id:           'b2c3d4e5-0002-0002-0002-000000000002',
+    document_id:  'doc-kyc-md-2016',
     area_code:    'KYC_AML',
     clause_ref:   'KYC-MD — Risk Categorisation of Customers',
     source_title: 'RBI Master Direction – Know Your Customer (KYC), 2016 (as amended) — reconstructed from general knowledge, NOT verified against current source text',
@@ -154,6 +177,7 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
   },
   {
     id:           'b2c3d4e5-0002-0002-0002-000000000003',
+    document_id:  'doc-kyc-md-2016',
     area_code:    'KYC_AML',
     clause_ref:   'KYC-MD — Enhanced Due Diligence for High-Risk Customers and PEPs',
     source_title: 'RBI Master Direction – Know Your Customer (KYC), 2016 (as amended) — reconstructed from general knowledge, NOT verified against current source text',
@@ -163,6 +187,7 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
   },
   {
     id:           'b2c3d4e5-0002-0002-0002-000000000004',
+    document_id:  'doc-kyc-md-2016',
     area_code:    'KYC_AML',
     clause_ref:   'KYC-MD — Periodic Updation of KYC',
     source_title: 'RBI Master Direction – Know Your Customer (KYC), 2016 (as amended) — reconstructed from general knowledge, NOT verified against current source text',
@@ -172,6 +197,7 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
   },
   {
     id:           'b2c3d4e5-0002-0002-0002-000000000005',
+    document_id:  'doc-kyc-md-2016',
     area_code:    'KYC_AML',
     clause_ref:   'KYC-MD — Video-based Customer Identification Process (V-CIP)',
     source_title: 'RBI Master Direction – Know Your Customer (KYC), 2016 (as amended) — reconstructed from general knowledge, NOT verified against current source text',
@@ -181,6 +207,7 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
   },
   {
     id:           'b2c3d4e5-0002-0002-0002-000000000006',
+    document_id:  'doc-kyc-md-2016',
     area_code:    'KYC_AML',
     clause_ref:   'KYC-MD — Record Maintenance and Suspicious Transaction Reporting',
     source_title: 'RBI Master Direction – Know Your Customer (KYC), 2016 (as amended) — reconstructed from general knowledge, NOT verified against current source text',
@@ -190,6 +217,7 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
   },
   {
     id:           'b2c3d4e5-0002-0002-0002-000000000007',
+    document_id:  'doc-kyc-md-2016',
     area_code:    'KYC_AML',
     clause_ref:   'KYC-MD — Principal Officer',
     source_title: 'RBI Master Direction – Know Your Customer (KYC), 2016 (as amended) — reconstructed from general knowledge, NOT verified against current source text',
@@ -200,12 +228,16 @@ export const CORPUS_CLAUSES: CorpusClause[] = [
 ]
 
 /**
- * Returns clauses for a given regulatory area.
+ * Returns clauses for a given regulatory area — but only from that area's
+ * currently active document(s), resolved via the Knowledge Base registry.
  * This app's only "retrieval" step — a direct filter, no ranking or
  * relevance scoring. See the file header above and /architecture for why.
+ * Signature is unchanged from before the Knowledge Base model existed —
+ * every caller (the rule engine, /api/generate) needed zero changes.
  */
 export function getClausesByAreaCode(areaCode: string): CorpusClause[] {
-  return CORPUS_CLAUSES.filter(c => c.area_code === areaCode)
+  const activeDocumentIds = new Set(getActiveDocuments(areaCode).map(d => d.id))
+  return CORPUS_CLAUSES.filter(c => activeDocumentIds.has(c.document_id))
 }
 
 /**

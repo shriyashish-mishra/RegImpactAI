@@ -121,6 +121,12 @@ export async function buildReport(assessmentId: string): Promise<ReportMapResult
         clause_text: c.clause_text,
         source_title: c.source_title,
         verified: c.verified,
+        // Absent on citations persisted before migration 0012 — defaults to
+        // null rather than undefined so old reports render exactly as
+        // before, just without the newer traceability fields.
+        document_version: c.document_version ?? null,
+        publication_date: c.publication_date ?? null,
+        authority: c.authority ?? null,
       })),
     recommendations: recommendationRows
       .filter(r => r.finding_id === row.id)

@@ -2,6 +2,7 @@ import { streamText, Output } from 'ai'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
 import { getClausesByAreaCode, getClauseById } from '@/lib/corpus'
+import { getDocumentById } from '@/lib/knowledgeBase/registry'
 import { getAssessableAreaCodes } from '@/lib/categoryMapping'
 import { applyRuleEngine } from '@/lib/ruleEngine'
 import { buildGenerateSystemPrompt, buildGenerateUserPrompt } from '@/lib/prompts/generate'
@@ -205,13 +206,21 @@ export async function POST(req: Request) {
 
         const findingId = findingRow.id as string
 
-        // verified is resolved from the trusted corpus, never taken from the
-        // model's own output — a hallucinated or paraphrased citation must
-        // never inherit a source clause's verified: true.
-        const citations = f.citations.map(c => ({
-          ...c,
-          verified: getClauseById(c.corpus_clause_id)?.verified ?? false,
-        }))
+        // verified, document_version, publication_date, and authority are
+        // all resolved server-side from the trusted corpus/registry, never
+        // taken from the model's own output — a hallucinated or paraphrased
+        // citation must never inherit a source document's trust or metadata.
+        const citations = f.citations.map(c => {
+          const clause = getClauseById(c.corpus_clause_id)
+          const document = clause ? getDocumentById(clause.document_id) : undefined
+          return {
+            ...c,
+            verified: clause?.verified ?? false,
+            document_version: document?.version ?? null,
+            publication_date: document?.publication_date ?? null,
+            authority: document?.authority ?? null,
+          }
+        })
         for (const c of citations) {
           emit({ type: 'step', text: `Verifying citation: ${c.clause_ref}…` })
         }
@@ -223,7 +232,7 @@ export async function POST(req: Request) {
         }
 
         if (citations.length > 0) {
-          await supabase.from('finding_citations').insert(
+          const { error: citationErr } = await supabase.from('finding_citations').insert(
             citations.map(c => ({
               finding_id: findingId,
               corpus_clause_id: c.corpus_clause_id,
@@ -231,8 +240,28 @@ export async function POST(req: Request) {
               clause_text: c.clause_text,
               source_title: c.source_title,
               verified: c.verified,
+              document_version: c.document_version,
+              publication_date: c.publication_date,
+              authority: c.authority,
             }))
           )
+          // Falls back to the pre-Knowledge-Base column set if migration
+          // 0012 hasn't been applied yet — citations must keep persisting
+          // either way, not silently fail because three new columns don't
+          // exist in the DB yet.
+          if (citationErr) {
+            console.error('[generate] finding_citations insert failed with new columns, retrying without them:', citationErr)
+            await supabase.from('finding_citations').insert(
+              citations.map(c => ({
+                finding_id: findingId,
+                corpus_clause_id: c.corpus_clause_id,
+                clause_ref: c.clause_ref,
+                clause_text: c.clause_text,
+                source_title: c.source_title,
+                verified: c.verified,
+              }))
+            )
+          }
         }
 
         if (f.recommendations.length > 0) {

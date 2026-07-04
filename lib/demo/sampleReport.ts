@@ -1,4 +1,5 @@
 import { getClauseById } from '@/lib/corpus'
+import { getDocumentById } from '@/lib/knowledgeBase/registry'
 import type { ReportData } from '@/lib/report/mapper'
 import type { Finding } from '@/lib/types'
 
@@ -15,12 +16,16 @@ import type { Finding } from '@/lib/types'
 const clause = (id: string) => {
   const c = getClauseById(id)
   if (!c) throw new Error(`Demo fixture references unknown corpus clause: ${id}`)
+  const document = getDocumentById(c.document_id)
   return {
     corpus_clause_id: c.id,
     clause_ref: c.clause_ref,
     clause_text: c.text,
     source_title: c.source_title,
     verified: c.verified,
+    document_version: document?.version ?? null,
+    publication_date: document?.publication_date ?? null,
+    authority: document?.authority ?? null,
   }
 }
 

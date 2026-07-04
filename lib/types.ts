@@ -206,12 +206,78 @@ export type QuestionsResponse = {
 
 
 // =============================================================================
-// REGULATORY CORPUS
+// REGULATORY KNOWLEDGE BASE
 // =============================================================================
+// A regulatory area (e.g. Digital Lending) can hold multiple documents (a
+// guideline, its circulars, amendments, FAQs); each document can have
+// multiple versions over time, only one of which is Active. See
+// lib/knowledgeBase/registry.ts. This models real regulatory lifecycles —
+// RBI amends and clarifies guidelines constantly — instead of treating a
+// regulation as one static PDF.
+
+export type DocumentType =
+  | 'master_direction'
+  | 'guideline'
+  | 'circular'
+  | 'notification'
+  | 'faq'
+  | 'press_release'
+  | 'clarification'
+  | 'advisory'
+  | 'discussion_paper'
+
+// Only 'active' documents participate in assessments (see
+// lib/knowledgeBase/registry.ts's getActiveDocuments). The rest exist so a
+// document's full lifecycle is representable without deleting history.
+export type DocumentStatus =
+  | 'draft'
+  | 'under_review'
+  | 'active'
+  | 'deprecated'
+  | 'superseded'
+  | 'archived'
+
+// A regulatory area under an authority — e.g. RBI's "Digital Lending".
+// status: 'coming_soon' areas exist in the registry (so the knowledge base
+// page can show them as a real extensibility point) but have zero
+// documents and zero corpus clauses — never fabricated content.
+export type RegulatoryArea = {
+  code:      string   // 'DLG', 'KYC_AML', 'PPI', 'PAYMENT_AGGREGATOR', 'ACCOUNT_AGGREGATOR', 'NBFC', 'UPI'
+  name:      string   // 'Digital Lending', 'KYC / AML', ...
+  authority: string   // 'Reserve Bank of India'
+  status:    'active' | 'coming_soon'
+}
+
+// Structured metadata for one regulatory document. Reusable across any
+// authority/area — nothing here is RBI-specific. A single area can hold
+// several of these (one per document_type, or several versions of the same
+// one); corpus clauses reference a document by id, never an area directly.
+export type RegulatoryDocument = {
+  id:               string
+  title:            string
+  authority:        string        // e.g. 'Reserve Bank of India'
+  area_code:        string        // joins to RegulatoryArea.code
+  document_type:    DocumentType
+  // Free-text, not a strict ISO date — real regulatory sourcing is often
+  // only known to month or year precision, and inventing a specific day
+  // would be fabricating precision the source doesn't have.
+  publication_date: string | null
+  effective_date:   string | null
+  version:          number
+  status:           DocumentStatus
+  jurisdiction:     string
+  source:           string         // human-readable citation of where this came from
+  last_reviewed:    string | null  // null until an actual review pass has a real date to record
+  supersedes:       string | null  // id of the RegulatoryDocument this replaced
+  superseded_by:    string | null  // id of the RegulatoryDocument that replaced this
+  verified:         boolean        // true only for text transcribed directly from source, never reconstructed
+  description:      string
+}
 
 export type CorpusClause = {
   id:           string   // UUID — matches corpus_clauses.id in Postgres
-  area_code:    string
+  document_id:  string   // joins to RegulatoryDocument.id — see lib/knowledgeBase/registry.ts
+  area_code:    string   // denormalized from the document for convenience/backward compat
   clause_ref:   string   // e.g. 'DLG Para 5 (i)'
   text:         string
   source_title: string
@@ -246,12 +312,22 @@ export type FindingImpact = {
 // clause_ref and clause_text are denormalised for display.
 // verified is resolved server-side from the corpus (lib/corpus.ts), never
 // trusted from the model's own output — see app/api/generate/route.ts.
+//
+// document_version/publication_date/authority are optional and resolved
+// server-side from the clause's RegulatoryDocument (lib/knowledgeBase),
+// same trust model as verified. Optional, not required, because citations
+// persisted before the Knowledge Base model existed have none of these —
+// CitationBlock renders them only when present, so old reports keep
+// rendering exactly as they always did.
 export type FindingCitation = {
-  corpus_clause_id: string
-  clause_ref:       string
-  clause_text:      string
-  source_title:     string
-  verified:         boolean
+  corpus_clause_id:  string
+  clause_ref:        string
+  clause_text:       string
+  source_title:      string
+  verified:          boolean
+  document_version:  number | null
+  publication_date:  string | null
+  authority:         string | null
 }
 
 export type FindingSeverity = 'high' | 'medium' | 'low'
@@ -391,4 +467,9 @@ export type FindingCitationRow = {
   clause_text:      string
   source_title:     string
   verified:         boolean
+  // Added by migration 0012 — absent (undefined) on rows written before it,
+  // never present as an error. lib/report/mapper.ts defaults each to null.
+  document_version?: number | null
+  publication_date?: string | null
+  authority?:        string | null
 }
