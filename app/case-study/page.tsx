@@ -72,6 +72,32 @@ const STACK = [
   'Zod for schema validation at every AI boundary',
 ]
 
+const SUCCESS_METRICS = [
+  { name: 'Reviewer Acceptance Rate', measures: 'Share of findings a compliance reviewer accepts without edits.', why: 'The real test of citation trust — this is the metric the whole product is built to move.' },
+  { name: 'Time-to-First-Insight', measures: 'Elapsed time from product description submitted to the first finding surfacing.', why: 'Compliance review today is measured in days; this is where AI assistance should show up first.' },
+  { name: 'Compliance Review Time Saved', measures: 'Reviewer hours on an AI-assisted assessment vs. a fully manual one.', why: 'The business case for the product — speed without a trust tradeoff.' },
+  { name: 'Citation Trust Rate', measures: 'How often reviewers escalate an unverified citation vs. a verified one.', why: 'Tests whether the "needs legal review" flag actually changes reviewer behavior, or gets ignored.' },
+  { name: 'Hallucination Flag Rate', measures: 'How often the evidence-consistency guard fires, and reviewer agreement with it.', why: 'A flag reviewers routinely override is miscalibrated and needs retuning, not removal.' },
+  { name: 'Assessment Completion Rate', measures: 'Share of started assessments that reach a final report.', why: 'Drop-off between Discovery and Report is the clearest signal of onboarding friction.' },
+  { name: 'Adaptive Question Effectiveness', measures: 'Share of Discovery answers that actually changed a finding\'s classification.', why: 'Justifies asking questions at all instead of a static intake form — proves it isn\'t decorative.' },
+  { name: 'Retrieval Precision', measures: 'Share of retrieved clauses actually relevant to the declared product categories.', why: 'Validates category-based filtering over testing the full corpus against every product regardless of fit.' },
+]
+
+const ROADMAP = [
+  { title: 'Enterprise Collaboration & Team Workspaces', body: 'Multiple reviewers on one assessment, with role-based access instead of a single-owner admin gate.' },
+  { title: 'Versioned Regulation Updates', body: 'Track when a regulatory clause changes and which past assessments relied on the superseded version.' },
+  { title: 'Workflow Integrations', body: 'Push findings into the tools compliance teams already work in — ticketing, GRC platforms, Slack.' },
+  { title: 'Continuous Compliance Monitoring', body: 'Re-assess automatically when either the product or the underlying regulation changes, not just on demand.' },
+  { title: 'Regulatory Change Alerts', body: 'Notify affected teams the moment a regulator amends a clause their product was assessed against.' },
+  { title: 'Audit History', body: 'A full change log per assessment — every re-run, every edit, every reviewer decision, timestamped.' },
+  { title: 'Explainable AI Improvements', body: 'Deeper reasoning traces beyond evidence/citation — surfacing the model\'s full chain of inference on request.' },
+  { title: 'Additional Jurisdictions', body: 'Singapore, UAE, UK, and EU are already selectable at onboarding — the roadmap is building real regulatory corpora behind them.' },
+  { title: 'Additional Regulatory Domains', body: 'PPI, UPI-specific rules, and insurance regulation, using the same citation-verification approach proven on DLG and KYC/AML.' },
+  { title: 'Offline Assessment', body: 'A downloadable assessment kit for environments where a live AI call isn\'t an option.' },
+  { title: 'Human-in-the-Loop Review', body: 'A structured reviewer workflow for confirming, editing, or overriding a finding — with that decision feeding back into future assessments.' },
+  { title: 'Policy Comparison', body: 'Diff two versions of the same product, or the same product against two regulatory regimes, side by side.' },
+]
+
 export default function CaseStudyPage() {
   return (
     <div className="min-h-screen bg-background">
@@ -92,7 +118,7 @@ export default function CaseStudyPage() {
             just produce them?
           </p>
           <div className="flex flex-wrap gap-2 pt-1">
-            {['Product Strategy', 'AI / ML', 'Regulatory Tech', 'Compliance'].map(tag => (
+            {['Product Strategy', 'AI Product', 'RegTech', 'FinTech', 'RAG', 'Explainable AI'].map(tag => (
               <Badge key={tag} variant="outline" className="rounded-full">{tag}</Badge>
             ))}
           </div>
@@ -201,44 +227,72 @@ export default function CaseStudyPage() {
         </section>
 
         <section className="flex flex-col gap-4">
-          <SectionLabel index={8} label="Evaluation" />
+          <SectionLabel index={8} label="Product Success Metrics" />
           <p className="text-sm text-muted leading-relaxed max-w-2xl">
-            This is a demo, not a product with real users yet — so these are the metrics I&apos;d
-            instrument first, not results I&apos;m claiming: the percentage of findings a human
-            compliance reviewer accepts without edits (the real test of citation trust), time from
-            product description to first finding, and how often reviewers escalate an unverified
-            citation versus a verified one — which would tell me whether the &ldquo;needs legal
-            review&rdquo; flag is actually changing reviewer behavior or just being ignored.
+            RegImpact AI hasn&apos;t run against real reviewer traffic yet, so nothing below is a
+            claimed result — it&apos;s the KPI framework I&apos;d instrument on day one in
+            production, the same way I&apos;d define success metrics before shipping any product.
+            The one thing already true today, structurally, is that every finding carries a
+            citation — the rest needs real usage to measure.
           </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {SUCCESS_METRICS.map(m => (
+              <div key={m.name} className="flex flex-col gap-1.5 p-4 bg-surface border border-border rounded-xl">
+                <span className="text-sm font-semibold text-foreground">{m.name}</span>
+                <span className="text-xs text-muted leading-relaxed">{m.measures}</span>
+                <span className="text-xs text-subtle leading-relaxed">{m.why}</span>
+              </div>
+            ))}
+          </div>
         </section>
 
         <section className="flex flex-col gap-4">
-          <SectionLabel index={9} label="Future Work" />
+          <SectionLabel index={9} label="Product Roadmap" />
           <p className="text-sm text-muted leading-relaxed max-w-2xl">
-            The current build covers two regulatory areas end to end — RBI&apos;s Digital Lending
-            Guidelines (fully verified) and KYC/AML (flagged unverified until checked against the
-            current source text) — to prove the citation-verification approach generalizes before
-            scaling it further. Next: verifying the KYC/AML corpus against the real regulation,
-            more regulatory domains, and full multi-user auth. See the{' '}
+            The current build proves the citation-verification approach end to end on two
+            regulatory areas — Digital Lending Guidelines and KYC/AML — deliberately, before
+            scaling breadth. Here&apos;s where the product goes from there.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {ROADMAP.map(r => (
+              <div key={r.title} className="flex flex-col gap-1 p-4 bg-surface border border-border rounded-xl">
+                <span className="text-sm font-medium text-foreground">{r.title}</span>
+                <span className="text-xs text-muted leading-relaxed">{r.body}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-subtle leading-relaxed">
+            See the{' '}
             <Link href="/architecture" className="text-accent hover:underline">architecture walkthrough</Link>{' '}
-            for the current scope in detail.
+            for exactly what&apos;s built today versus what&apos;s ahead.
           </p>
         </section>
 
         <section className="flex flex-col gap-4">
           <SectionLabel index={10} label="About the Creator" />
-          <p className="text-sm text-muted leading-relaxed max-w-2xl">
-            I&apos;m Shriyashish Mishra, a Product Manager. I built RegImpact AI to answer a
-            question I kept running into: most AI product demos are easy to build impressive-
-            looking output for, but hard to trust — a plausible-sounding finding isn&apos;t the
-            same as a correct one. This project is my attempt at the harder version of that
-            problem: an AI system whose conclusions are traceable back to a real source, end to
-            end, in a domain where an unverifiable answer is actively worse than no answer. See
-            more of my work at{' '}
-            <a href={PORTFOLIO_URL} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
-              my portfolio
-            </a>.
-          </p>
+          <div className="flex flex-col gap-3 max-w-2xl">
+            <p className="text-sm text-muted leading-relaxed">
+              I&apos;m Shriyashish Mishra, a Product Manager. I&apos;m drawn to problems that start
+              ambiguous — where the hard part isn&apos;t writing code, it&apos;s deciding what
+              &ldquo;correct&rdquo; even means before you can build toward it.
+            </p>
+            <p className="text-sm text-muted leading-relaxed">
+              AI products interest me because they make that ambiguity structural: a model can
+              sound confident and still be wrong, and most products don&apos;t give a user any way
+              to tell the difference. I think that gap — between confidence and correctness — is
+              the actual product problem of this generation of AI tools, not a footnote to solve
+              later. Trust and explainability aren&apos;t features you add on top; they&apos;re
+              the design constraint everything else has to work within.
+            </p>
+            <p className="text-sm text-muted leading-relaxed">
+              I built RegImpact AI to work that constraint end to end in a domain where it matters
+              most — regulatory compliance, where an unverifiable answer is worse than no answer
+              at all. See more of my work at{' '}
+              <a href={PORTFOLIO_URL} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                my portfolio
+              </a>.
+            </p>
+          </div>
         </section>
 
         <div className="flex items-center gap-6 pt-4 border-t border-border">

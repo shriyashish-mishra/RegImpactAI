@@ -47,6 +47,9 @@ export default function SiteFooter() {
           <p className="text-xs text-subtle">
             Built by <span className="font-medium text-muted">Shriyashish Mishra</span> — AI Product Management Portfolio
           </p>
+          <p className="text-[10px] text-subtle/70 font-mono uppercase tracking-widest pt-0.5">
+            FinTech · RegTech · RAG · Explainable AI
+          </p>
         </div>
         <div className="flex items-center gap-4">
           {CONTACT_LINKS.map(link => (

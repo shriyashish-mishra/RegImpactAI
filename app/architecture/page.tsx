@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import SiteHeader from '@/components/shell/SiteHeader'
 import SectionLabel from '@/components/primitives/SectionLabel'
+import { Badge } from '@/components/ui/badge'
 
 const TITLE = 'Architecture — RegImpact AI'
 const DESCRIPTION = 'How RegImpact AI is built, end to end.'
@@ -13,6 +14,44 @@ export const metadata: Metadata = {
   openGraph: { title: TITLE, description: DESCRIPTION },
   twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION },
 }
+
+const LAYERS = [
+  {
+    name: 'Structured Inputs',
+    what: 'Multi-select onboarding — categories, geographies, customer segments, regulated entities, capabilities.',
+    why: 'Ground truth the system never has to guess at. Fewer inferred assumptions means fewer places for an AI reasoning error to enter the pipeline in the first place.',
+  },
+  {
+    name: 'Deterministic Retrieval Rules',
+    what: 'A plain lookup (lib/categoryMapping.ts) — no AI call — decides which regulatory areas even apply, before any inference happens.',
+    why: 'Cheaper and more auditable than asking a model to decide relevance every time. A rule either matches or it doesn\'t; that\'s testable in a way a model\'s judgment isn\'t.',
+  },
+  {
+    name: 'AI Inference Layer',
+    what: 'One abstraction (lib/ai/provider.ts) behind every model call — understanding the product, adaptive discovery, and assessment all route through it.',
+    why: 'The reasoning work — reading a product description, deciding what\'s still unclear, testing it against regulatory text — is language work only a model does well. The provider behind it is swappable and never exposed.',
+  },
+  {
+    name: 'Adaptive Discovery',
+    what: 'Targeted follow-up questions, scoped to exactly what structured inputs and inferred elements don\'t already cover.',
+    why: 'A static intake form asks the same twenty questions regardless of the product. This asks the 3-5 that would actually change the compliance answer — better signal, less user effort.',
+  },
+  {
+    name: 'Citation Verification',
+    what: 'Every citation\'s "verified" flag is resolved server-side against the trusted corpus — never taken from the model\'s own output.',
+    why: 'A model can misquote or paraphrase confidently. The verification step means a citation can\'t inherit trust it hasn\'t earned, no matter how the model presents it.',
+  },
+  {
+    name: 'Assessment Engine',
+    what: 'Every clause in scope is classified — compliant, non-compliant, potential gap, or info required — not just the ones that look like problems.',
+    why: 'A report that only ever lists problems can\'t be checked against confirmations, and can\'t produce a real compliance score.',
+  },
+  {
+    name: 'Executive Report',
+    what: 'Compliance score, risk level, and launch recommendation are computed deterministically from the classified findings — no AI call.',
+    why: 'A number a reviewer will act on should come from arithmetic they can audit, not a second round of model judgment.',
+  },
+]
 
 const PIPELINE = [
   { step: 'Describe',   route: '/api/synthesize' },
@@ -47,14 +86,42 @@ export default function ArchitecturePage() {
             How it&apos;s built
           </h1>
           <p className="text-sm text-muted leading-relaxed max-w-2xl">
-            Next.js App Router on the frontend, three AI-inference API routes in the middle,
-            Supabase (Postgres) for persistence. No custom backend service — the route handlers
-            are the backend.
+            This isn&apos;t a single prompt with a chat interface on top. Deterministic rules decide
+            what to test before any model call happens, and compute the report after — AI reasoning
+            is bookended by logic the system can be held accountable to, not trusted blindly.
           </p>
+          <div className="flex flex-wrap gap-2 pt-1">
+            {['System Design', 'RAG', 'AI Orchestration', 'Explainable AI', 'Audit Trail'].map(tag => (
+              <Badge key={tag} variant="outline" className="rounded-full">{tag}</Badge>
+            ))}
+          </div>
         </div>
 
         <section className="flex flex-col gap-5">
-          <SectionLabel index={1} label="Pipeline" />
+          <SectionLabel index={1} label="System Design" />
+          <p className="text-sm text-muted leading-relaxed max-w-2xl">
+            Seven layers, each with one job. AI reasoning only ever runs where language
+            understanding is genuinely needed — everything decidable by a plain rule is decided by
+            one, before or after the model is ever called.
+          </p>
+          <div className="flex flex-col gap-2">
+            {LAYERS.map((layer, i) => (
+              <div key={layer.name} className="flex items-start gap-3 px-4 py-3 bg-surface border border-border rounded-lg">
+                <span className="w-6 h-6 rounded-full bg-surface-raised text-accent text-xs font-mono font-semibold flex items-center justify-center shrink-0 mt-0.5">
+                  {i + 1}
+                </span>
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium text-foreground">{layer.name}</span>
+                  <span className="text-xs text-muted leading-relaxed">{layer.what}</span>
+                  <span className="text-xs text-subtle leading-relaxed">{layer.why}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="flex flex-col gap-5">
+          <SectionLabel index={2} label="Request Pipeline" />
           <div className="flex flex-wrap items-stretch gap-2">
             {PIPELINE.map((item, i) => (
               <div key={item.step} className="flex items-center gap-2">
@@ -72,7 +139,7 @@ export default function ArchitecturePage() {
         </section>
 
         <section className="flex flex-col gap-4">
-          <SectionLabel index={2} label="Streaming" />
+          <SectionLabel index={3} label="Streaming" />
           <p className="text-sm text-muted leading-relaxed max-w-2xl">
             <code className="text-xs font-mono bg-surface px-1.5 py-0.5 rounded text-accent">/api/generate</code>{' '}
             responds with NDJSON — one JSON event per line, each a{' '}
@@ -88,7 +155,7 @@ export default function ArchitecturePage() {
         </section>
 
         <section className="flex flex-col gap-5">
-          <SectionLabel index={3} label="Data Model" />
+          <SectionLabel index={4} label="Data Model" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {TABLES.map(table => (
               <div key={table.name} className="flex flex-col gap-1 px-4 py-3 bg-surface border border-border rounded-lg">
@@ -104,11 +171,11 @@ export default function ArchitecturePage() {
         </section>
 
         <section className="flex flex-col gap-4">
-          <SectionLabel index={4} label="Retrieval" />
+          <SectionLabel index={5} label="Retrieval" />
           <p className="text-sm text-muted leading-relaxed max-w-2xl">
-            Not embeddings-based semantic search — retrieval happens in two steps, both direct
-            filters, no ranking. First, the product&apos;s declared categories (Step 1, multi-select)
-            pick which regulatory areas are worth testing at all — a{' '}
+            Not embeddings-based semantic search — retrieval happens in two direct filters, no
+            ranking step. First, the product&apos;s declared categories (multi-select) decide which
+            regulatory areas are worth testing at all — a{' '}
             <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">Payments</code> product only pulls{' '}
             <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">KYC_AML</code>, while a product
             categorized as both{' '}
@@ -119,15 +186,14 @@ export default function ArchitecturePage() {
             <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">lib/categoryMapping.ts</code>).
             Adding a category can only ever add area codes, never remove one another selected
             category already required. Second, every clause within those selected areas — 19 total
-            across both today — goes to the model directly, no further filtering. A deliberate
-            choice at this scale: the report shows a verdict for every clause actually in scope,
-            not a curated subset. Would need real ranking if the corpus grew into the hundreds of
-            clauses per area; it hasn&apos;t yet.
+            across both today — goes to the model directly. The report shows a verdict for every
+            clause actually in scope, not a curated subset an approximate retrieval step might have
+            dropped.
           </p>
         </section>
 
         <section className="flex flex-col gap-4">
-          <SectionLabel index={5} label="AI Inference Layer" />
+          <SectionLabel index={6} label="AI Inference Layer" />
           <p className="text-sm text-muted leading-relaxed max-w-2xl">
             Every route that needs the AI inference engine calls it through one abstraction —{' '}
             <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">lib/ai/provider.ts</code> — instead
@@ -141,7 +207,7 @@ export default function ArchitecturePage() {
         </section>
 
         <section className="flex flex-col gap-4">
-          <SectionLabel index={6} label="Cost Protection" />
+          <SectionLabel index={7} label="Cost Protection" />
           <p className="text-sm text-muted leading-relaxed max-w-2xl">
             Every AI-inference-calling route checks and atomically increments a shared daily
             counter in{' '}
@@ -155,22 +221,36 @@ export default function ArchitecturePage() {
         </section>
 
         <section className="flex flex-col gap-4">
-          <SectionLabel index={7} label="Current Scope" />
+          <SectionLabel index={8} label="MVP Scope & Scaling Path" />
+          <p className="text-sm text-muted leading-relaxed max-w-2xl">
+            Two regulatory areas are live today — RBI&apos;s Digital Lending Guidelines and
+            KYC/AML — chosen deliberately, not as a shortcut. DLG is where citation-verification
+            actually gets exercised hardest (disbursal mechanics, cooling-off periods, fee rules),
+            and KYC/AML is the one obligation almost every fintech category triggers regardless of
+            what else it does. Proving the trust mechanism on these two first, end to end, matters
+            more than shipping shallow coverage across many. A product model may still show PPI as
+            &ldquo;in scope&rdquo; based on what the description implies — that&apos;s an honest
+            reflection of the product, not a claim about what&apos;s assessed. No findings are
+            generated for it, since there&apos;s no corpus behind it yet.
+          </p>
+          <p className="text-sm text-muted leading-relaxed max-w-2xl">
+            Scaling to a new regulatory area is additive, not a rework: add its clauses to the
+            corpus, add one row to{' '}
+            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">lib/categoryMapping.ts</code>{' '}
+            mapping the relevant product categories to it, and it plugs into retrieval, discovery,
+            and assessment automatically — no changes to the pipeline itself. The same is true for
+            jurisdictions: geography is already a first-class, multi-select onboarding field, ready
+            for regulatory corpora beyond India.
+          </p>
           <div className="px-4 py-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
             <p className="text-sm text-amber-200 leading-relaxed">
-              Two regulatory areas — DLG and KYC/AML — have corpus clauses to test against today.
-              The product model may reference PPI as &ldquo;in scope&rdquo;, but no findings are
-              ever generated for it — nothing in the corpus tests it. A deliberate MVP boundary:
-              prove the citation-verification approach end to end before expanding further.
-            </p>
-          </div>
-          <div className="px-4 py-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-            <p className="text-sm text-amber-200 leading-relaxed">
-              The KYC/AML clauses specifically are <strong>unverified</strong> — reconstructed from
-              general knowledge, not transcribed from the current source document. DLG clauses are
-              verbatim and fully verified. Every citation carries this flag; unverified ones render
-              an explicit &ldquo;needs legal review&rdquo; notice. Don&apos;t rely on a KYC/AML
-              finding for an actual compliance decision.
+              One honest caveat this scope decision comes with: the KYC/AML clauses are{' '}
+              <strong>unverified</strong> — reconstructed from general regulatory knowledge, not
+              transcribed from the current source document, unlike the verbatim, fully verified DLG
+              clauses. Every citation carries this distinction through to the report; unverified
+              ones render an explicit &ldquo;needs legal review&rdquo; notice rather than being
+              presented as equally trustworthy. Don&apos;t rely on a KYC/AML finding for an actual
+              compliance decision until that verification work is done.
             </p>
           </div>
         </section>

@@ -3,7 +3,7 @@ import { Clock, Scale, HelpCircle, Search, MessageSquare, Database, Brain, Clipb
 import SectionLabel from '@/components/primitives/SectionLabel'
 import { Badge } from '@/components/ui/badge'
 
-const TAGS = ['Product Strategy', 'AI / ML', 'Regulatory Tech', 'Compliance', 'B2B SaaS']
+const TAGS = ['Product Strategy', 'AI Product', 'FinTech', 'RegTech', 'RAG', 'Risk Assessment']
 
 const PROBLEMS = [
   {
@@ -82,7 +82,10 @@ export default function LandingStory() {
       <section className="flex flex-col gap-5">
         <SectionLabel index={2} label="How RegImpact Works" />
         <p className="text-sm text-muted max-w-2xl leading-relaxed">
-          Five stages, each one feeding the next — not a single black-box prompt.
+          Five orchestrated stages, each feeding the next — not a single black-box prompt.
+          Deterministic rules decide what to test before AI reasoning ever runs, and compute the
+          report after. See the{' '}
+          <Link href="/architecture" className="text-accent hover:underline">full system design</Link>.
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {PIPELINE.map((p, i) => (
@@ -113,11 +116,12 @@ export default function LandingStory() {
             </p>
           </div>
           <div className="flex flex-col gap-2 p-5 bg-surface border border-border rounded-xl">
-            <h3 className="text-sm font-semibold text-foreground">Why retrieval, not memory</h3>
+            <h3 className="text-sm font-semibold text-foreground">Why retrieval, not memory (RAG)</h3>
             <p className="text-xs text-muted leading-relaxed">
-              Findings are tested against real clauses pulled from a corpus at request time, not
-              recalled from what the model memorized during training — so every finding can be
-              traced back to the exact text it&apos;s based on. See{' '}
+              Findings are tested against real clauses pulled from a regulatory corpus at request
+              time — retrieval-augmented generation, not recalled from what the model memorized
+              during training — so every finding can be traced back to the exact text it&apos;s
+              based on. See{' '}
               <Link href="/architecture" className="text-accent hover:underline">the architecture</Link>{' '}
               for the honest version of this, including its current scale limits.
             </p>

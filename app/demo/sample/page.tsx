@@ -29,7 +29,9 @@ export default function SampleDemoPage() {
         <div className="mx-auto max-w-3xl px-6 pt-8">
           <p className="text-xs text-muted bg-surface border border-border rounded-lg px-4 py-3 leading-relaxed">
             This is a static sample report — no API calls, no setup required. Its findings cite
-            real clauses from the same regulatory corpus the live assessment flow uses.{' '}
+            real clauses from the same regulatory corpus the live assessment flow uses. A live
+            example of AI-powered RegTech: retrieval-augmented findings, citation verification, and
+            an explainable evidence trail on every line.{' '}
             <Link href="/" className="text-accent hover:underline">
               Try the real flow →
             </Link>
