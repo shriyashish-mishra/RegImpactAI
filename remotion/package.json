@@ -1,0 +1,24 @@
+{
+  "name": "regimpact-ai-demo-video",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Programmatic ~105s silent product demo video for RegImpact AI, generated from code via Remotion. No spoken narration by design — the story is told through motion typography and (optionally) an ambient music bed. Isolated from the main Next.js app (separate bundler, separate React copy) — see README.md for how to regenerate after UI changes or drop in a music file.",
+  "scripts": {
+    "start": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts RegImpactDemo out/regimpact-demo.mp4",
+    "generate-subtitles": "tsx src/narration/generateSubtitles.ts"
+  },
+  "dependencies": {
+    "remotion": "4.0.484",
+    "@remotion/cli": "4.0.484",
+    "@remotion/google-fonts": "4.0.484",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "tsx": "^4.19.0",
+    "@types/react": "^19.0.0",
+    "@types/node": "^22.0.0"
+  }
+}

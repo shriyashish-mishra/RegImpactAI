@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Clock, Scale, HelpCircle, Search, MessageSquare, Database, Brain, ClipboardCheck, ShieldCheck } from 'lucide-react'
 import SectionLabel from '@/components/primitives/SectionLabel'
 import { Badge } from '@/components/ui/badge'
+import DemoVideoSection from '@/components/screens/DemoVideoSection'
 
 const TAGS = ['Product Strategy', 'AI Product', 'FinTech', 'RegTech', 'RAG', 'Risk Assessment']
 
@@ -62,9 +63,12 @@ export default function LandingStory() {
         </div>
       </div>
 
+      {/* Demo video */}
+      <DemoVideoSection />
+
       {/* Problem */}
       <section className="flex flex-col gap-5">
-        <SectionLabel index={1} label="The Problem" />
+        <SectionLabel index={2} label="The Problem" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {PROBLEMS.map(p => (
             <div key={p.title} className={`flex flex-col gap-3 p-5 bg-surface border border-border border-l-2 ${p.border} rounded-xl`}>
@@ -80,7 +84,7 @@ export default function LandingStory() {
 
       {/* How it works */}
       <section className="flex flex-col gap-5">
-        <SectionLabel index={2} label="How RegImpact Works" />
+        <SectionLabel index={3} label="How RegImpact Works" />
         <p className="text-sm text-muted max-w-2xl leading-relaxed">
           Five orchestrated stages, each feeding the next — not a single black-box prompt.
           Deterministic rules decide what to test before AI reasoning ever runs, and compute the
@@ -105,7 +109,7 @@ export default function LandingStory() {
 
       {/* Why AI / RAG / adaptive questioning */}
       <section className="flex flex-col gap-5">
-        <SectionLabel index={3} label="Why It's Built This Way" />
+        <SectionLabel index={4} label="Why It's Built This Way" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="flex flex-col gap-2 p-5 bg-surface border border-border rounded-xl">
             <h3 className="text-sm font-semibold text-foreground">Why AI at all</h3>
@@ -141,7 +145,7 @@ export default function LandingStory() {
       <section className="flex flex-col gap-4 p-6 bg-surface border border-accent/30 rounded-xl">
         <div className="flex items-center gap-2">
           <ShieldCheck size={18} className="text-accent" aria-hidden="true" />
-          <SectionLabel index={4} label="What Makes This Different" />
+          <SectionLabel index={5} label="What Makes This Different" />
         </div>
         <p className="text-sm text-muted leading-relaxed max-w-2xl">
           Every finding — compliant or not — cites the exact clause it&apos;s based on, verbatim,
