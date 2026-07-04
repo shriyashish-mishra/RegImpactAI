@@ -3,6 +3,7 @@ import { Clock, Scale, HelpCircle, Search, MessageSquare, Database, Brain, Clipb
 import SectionLabel from '@/components/primitives/SectionLabel'
 import { Badge } from '@/components/ui/badge'
 import DemoVideoSection from '@/components/screens/DemoVideoSection'
+import { PORTFOLIO_URL } from '@/lib/site'
 
 const TAGS = ['Product Strategy', 'AI Product', 'FinTech', 'RegTech', 'RAG', 'Risk Assessment']
 
@@ -53,6 +54,13 @@ export default function LandingStory() {
         <p className="text-lg text-muted max-w-xl leading-relaxed">
           AI-powered regulatory compliance assessment for Indian fintech — every finding traced
           back to a real, verifiable regulatory clause.
+        </p>
+        <p className="text-xs text-subtle">
+          Designed &amp; built by{' '}
+          <a href={PORTFOLIO_URL} target="_blank" rel="noopener noreferrer" className="text-muted hover:text-accent transition-colors">
+            Shriyashish Mishra
+          </a>
+          , Product Manager
         </p>
         <div className="flex flex-wrap gap-2 pt-2">
           {TAGS.map((tag, i) => (
