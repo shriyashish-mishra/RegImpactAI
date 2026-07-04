@@ -177,6 +177,16 @@ export type QuotaExceededResponse = {
   resetAt:  string
 }
 
+// Returned by GET /api/quota-status — a read-only check the homepage calls
+// before onboarding starts, so nobody fills in the form only to hit
+// quota_exceeded at /api/synthesize. Never increments the counter and never
+// touches the AI inference engine (see lib/quota.ts's getDailyQuotaStatus).
+export type QuotaStatusResponse = {
+  exhausted: boolean
+  remaining: number
+  resetAt:   string
+}
+
 // What the client sends to /api/questions and /api/generate.
 // narration stripped; assessment_id promoted to top level.
 export type ConfirmedModel = {
