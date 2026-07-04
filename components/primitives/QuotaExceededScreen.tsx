@@ -17,10 +17,11 @@ function formatRemaining(ms: number): string {
 }
 
 /**
- * Shown instead of a raw error whenever any Gemini-calling route (synthesize,
- * questions, generate) rejects a request because lib/quota.ts's daily limit
- * is exhausted. resetAt is RegImpact's own reset time (next UTC midnight),
- * never a guess at Google's own quota window.
+ * Shown instead of a raw error whenever any AI-inference-calling route
+ * (synthesize, questions, generate) rejects a request because
+ * lib/quota.ts's daily limit is exhausted. resetAt is RegImpact's own
+ * reset time (next UTC midnight), never a guess at the model provider's
+ * own quota window.
  */
 export default function QuotaExceededScreen({ resetAt }: Props) {
   const [remaining, setRemaining] = useState(() => new Date(resetAt).getTime() - Date.now())

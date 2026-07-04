@@ -15,39 +15,63 @@ export type Step = 'product_info' | 'seed' | 'mirror' | 'discovery' | 'generatin
 // =============================================================================
 // STRUCTURED PRODUCT INFO (onboarding Step 1)
 //
-// Captured before any Gemini call — the point is to give the model ground
-// truth instead of asking it to infer things a form field already answers.
-// Every synthesize/questions/generate prompt is told to trust these fields
-// over anything it would otherwise infer, and only infer what's missing.
+// Captured before any AI inference call — the point is to give the model
+// ground truth instead of asking it to infer things a form field already
+// answers. Every prompt is told to trust these fields over anything it
+// would otherwise infer, and only infer what's missing.
+//
+// Most fields are multi-select: real fintech products span multiple
+// categories, geographies, customer segments, and regulated-entity
+// relationships at once — forcing a single choice understated what the
+// product actually is. Industry stays single-select and fixed to 'FinTech'
+// (a plain string, not a union) since no other industry is supported yet;
+// the type is deliberately loose so adding a second industry later doesn't
+// require a breaking change here.
 // =============================================================================
 
 export type ProductCategory =
   | 'Digital Lending'
-  | 'BNPL'
   | 'Payments'
-  | 'Wallet'
+  | 'BNPL'
   | 'Neobank'
   | 'Invoice Financing'
-  | 'Wealth Management'
   | 'Investment Platform'
   | 'Insurance'
+  | 'Merchant Financing'
   | 'Lending Marketplace'
+  | 'Wealth Management'
+  | 'Other'
+
+// Not a strict enum of "supported" geographies — India is only ever a
+// default *selection*, never a hardcoded business rule (see
+// components/screens/ProductInfoScreen.tsx). Additional geographies are
+// free-form business reality (a product can operate anywhere); this union
+// is just the starter chip set, extended the same way ProductCategory is.
+export type Geography =
+  | 'India'
+  | 'Singapore'
+  | 'UAE'
+  | 'UK'
+  | 'EU'
   | 'Other'
 
 export type TargetCustomer =
   | 'Retail Consumers'
   | 'SMEs'
-  | 'Enterprises'
   | 'Merchants'
+  | 'Enterprises'
   | 'Banks'
   | 'NBFCs'
+  | 'Government'
 
 export type RegulatedEntityType =
-  | 'RBI Regulated NBFC'
-  | 'Bank'
-  | 'FinTech partnered with NBFC'
+  | 'Partner NBFC'
+  | 'Scheduled Commercial Bank'
   | 'Payment Aggregator'
   | 'PPI Issuer'
+  | 'Account Aggregator'
+  | 'Insurance Company'
+  | 'Partner Bank'
   | 'Other'
 
 export type Capability =
@@ -75,13 +99,13 @@ export type Capability =
   | 'Document Upload'
 
 export type StructuredProductInfo = {
-  product_name:     string
-  industry:         string // fixed to 'FinTech' for now — no other industries supported yet
-  category:         ProductCategory
-  geography:        string // fixed to 'India' for now
-  target_customer:  TargetCustomer
-  regulated_entity: RegulatedEntityType
-  capabilities:     Capability[]
+  product_name:       string
+  industry:           string // fixed to 'FinTech' for now — no other industries supported yet
+  categories:         ProductCategory[]
+  geographies:        Geography[] // defaults to ['India'], never hardcoded as a business rule
+  target_customers:   TargetCustomer[]
+  regulated_entities: RegulatedEntityType[]
+  capabilities:       Capability[]
 }
 
 
@@ -124,8 +148,9 @@ export type TriggeredArea = {
 // What the model returns from synthesis — no DB identity yet.
 // narration[] is displayed during streaming, then discarded.
 // structuredInfo is echoed straight back from the request, not regenerated
-// by Gemini — the whole point of Step 1 is that these fields are ground
-// truth, never re-inferred and potentially altered by the model.
+// by the AI inference engine — the whole point of Step 1 is that these
+// fields are ground truth, never re-inferred and potentially altered by
+// the model.
 export type DraftModel = {
   product_name:    string
   structuredInfo:  StructuredProductInfo
@@ -141,7 +166,7 @@ export type SynthesisResponse = {
   model:         DraftModel
 }
 
-// Returned by any Gemini-calling route (synthesize/questions/generate) with
+// Returned by any AI-inference-calling route (synthesize/questions/generate) with
 // HTTP 429 when the daily quota (lib/quota.ts) is exhausted. Client code
 // checks `error === 'quota_exceeded'` to show QuotaExceededScreen instead of
 // a generic error — see components/primitives/QuotaExceededScreen.tsx.

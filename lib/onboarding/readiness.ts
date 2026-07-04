@@ -5,8 +5,8 @@ import type { StructuredProductInfo, ProductElement } from '@/lib/types'
  * whether enough information exists for a high-confidence assessment,
  * computed deterministically from what Step 1 captured and what the model
  * flagged as conspicuously absent (ProductElement.is_negative) — never
- * asked of Gemini itself, so it can't be gamed by confident-sounding but
- * unsubstantiated model output.
+ * asked of the AI inference engine itself, so it can't be gamed by
+ * confident-sounding but unsubstantiated model output.
  *
  * Starts at 100 and subtracts for concrete gaps rather than starting low
  * and adding up — a completed Step 1 form is the expected case, not an

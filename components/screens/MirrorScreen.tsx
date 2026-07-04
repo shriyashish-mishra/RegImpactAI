@@ -64,34 +64,45 @@ export default function MirrorScreen({ draftModel, assessmentId, onConfirm, onSt
         </p>
       </div>
 
-      {/* What you told us */}
-      <section className="flex flex-col gap-3">
+      {/* What you told us — everything selected in structured onboarding,
+          shown as read-only chip groups matching how it was collected.
+          Only Industry is single-valued; everything else is multi-select. */}
+      <section className="flex flex-col gap-4">
         <h2 className="font-mono text-xs font-semibold text-accent uppercase tracking-widest">
           What you told us
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {[
-            { label: 'Industry', value: structuredInfo.industry },
-            { label: 'Category', value: structuredInfo.category },
-            { label: 'Geography', value: structuredInfo.geography },
-            { label: 'Target Customer', value: structuredInfo.target_customer },
-            { label: 'Regulated Entity', value: structuredInfo.regulated_entity },
-          ].map(f => (
-            <div key={f.label} className="flex flex-col gap-1 px-3 py-2.5 bg-surface border border-accent/20 rounded-lg">
-              <span className="font-mono text-[10px] uppercase tracking-widest text-subtle">{f.label}</span>
-              <span className="text-sm text-foreground">{f.value}</span>
-            </div>
-          ))}
-        </div>
-        {structuredInfo.capabilities.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {structuredInfo.capabilities.map(cap => (
-              <span key={cap} className="text-xs font-medium px-2.5 py-1 rounded-full bg-accent/10 border border-accent/30 text-accent">
-                {cap}
-              </span>
-            ))}
+
+        <div className="flex flex-col gap-1">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-subtle">Industry</span>
+          <div className="w-fit px-3 py-1.5 bg-surface border border-accent/20 rounded-lg text-sm text-foreground">
+            {structuredInfo.industry}
           </div>
-        )}
+        </div>
+
+        {[
+          { label: 'Product Categories', values: structuredInfo.categories },
+          { label: 'Operating Geographies', values: structuredInfo.geographies },
+          { label: 'Target Customers', values: structuredInfo.target_customers },
+          { label: 'Regulated Entities / Partners', values: structuredInfo.regulated_entities },
+          { label: 'Capabilities', values: structuredInfo.capabilities },
+        ].map(group => (
+          <div key={group.label} className="flex flex-col gap-1.5">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-subtle">
+              {group.label} ({group.values.length} selected)
+            </span>
+            {group.values.length === 0 ? (
+              <span className="text-xs text-subtle italic">None selected</span>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {group.values.map(v => (
+                  <span key={v} className="text-xs font-medium px-2.5 py-1 rounded-full bg-accent/10 border border-accent/30 text-accent">
+                    {v}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
       </section>
 
       {/* What we inferred */}

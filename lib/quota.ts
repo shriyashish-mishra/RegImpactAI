@@ -1,15 +1,15 @@
 import type { createServerClient } from '@/lib/supabase/server'
 
 /**
- * Hard cost protection for Gemini calls (see supabase/migrations/0009).
+ * Hard cost protection for AI inference calls (see supabase/migrations/0009).
  *
- * The default of 18 isn't arbitrary: this project's Gemini API key is on
- * the free tier, which caps at 20 requests/day for gemini-2.5-flash across
- * the whole project (observed directly in production — see the quota-
- * exceeded errors this surfaced during testing). Each full assessment
- * costs 3 Gemini calls (synthesize + questions + generate), so 18 leaves a
- * safety margin under Google's own ceiling rather than racing it exactly.
- * Fully overridable via MAX_DAILY_ASSESSMENTS with no code change.
+ * The default of 18 isn't arbitrary: this project's model provider API key
+ * is on the free tier, which caps at 20 requests/day across the whole
+ * project (observed directly in production — see the quota-exceeded
+ * errors this surfaced during testing). Each full assessment costs 3
+ * inference calls (synthesize + questions + generate), so 18 leaves a
+ * safety margin under the provider's own ceiling rather than racing it
+ * exactly. Fully overridable via MAX_DAILY_ASSESSMENTS with no code change.
  */
 const DEFAULT_MAX_DAILY_ASSESSMENTS = 18
 
@@ -19,7 +19,7 @@ export function getMaxDailyAssessments(): number {
   return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : DEFAULT_MAX_DAILY_ASSESSMENTS
 }
 
-/** Next UTC midnight — matches Postgres's current_date used in the migration, not a guess at Google's own reset schedule. */
+/** Next UTC midnight — matches Postgres's current_date used in the migration, not a guess at the model provider's own reset schedule. */
 export function nextResetAt(): Date {
   const now = new Date()
   const reset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0))
@@ -34,10 +34,10 @@ export type QuotaResult = {
 }
 
 /**
- * Atomically checks and consumes one unit of today's shared Gemini-call
- * budget. Call this at the top of every route that calls Gemini
- * (synthesize, questions, generate) — before the model call, never after —
- * so a rejected request never reaches Gemini at all.
+ * Atomically checks and consumes one unit of today's shared AI-inference
+ * call budget. Call this at the top of every route that calls the
+ * inference engine (synthesize, questions, generate) — before the model
+ * call, never after — so a rejected request never reaches it at all.
  */
 export async function checkAndIncrementDailyQuota(
   supabase: ReturnType<typeof createServerClient>

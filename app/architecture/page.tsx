@@ -29,7 +29,7 @@ const TABLES = [
   { name: 'finding_impacts',    detail: 'Product / UI / engineering / business impact statements.' },
   { name: 'finding_citations',  detail: 'Source clause(s) per finding, joined by id, verified flag resolved server-side.' },
   { name: 'recommendations',    detail: 'Ordered, actionable recommendations per finding.' },
-  { name: 'daily_usage',        detail: 'One row per calendar date — the shared Gemini-call quota counter.' },
+  { name: 'daily_usage',        detail: 'One row per calendar date — the shared AI-inference quota counter.' },
 ]
 
 export default function ArchitecturePage() {
@@ -47,7 +47,7 @@ export default function ArchitecturePage() {
             How it&apos;s built
           </h1>
           <p className="text-sm text-muted leading-relaxed max-w-2xl">
-            Next.js App Router on the frontend, three Gemini-calling API routes in the middle,
+            Next.js App Router on the frontend, three AI-inference API routes in the middle,
             Supabase (Postgres) for persistence. No custom backend service — the route handlers
             are the backend.
           </p>
@@ -107,37 +107,55 @@ export default function ArchitecturePage() {
           <SectionLabel index={4} label="Retrieval" />
           <p className="text-sm text-muted leading-relaxed max-w-2xl">
             Not embeddings-based semantic search — retrieval happens in two steps, both direct
-            filters, no ranking. First, the product&apos;s declared category (Step 1) picks which
-            regulatory areas are even worth testing — a{' '}
-            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">Wallet</code> only pulls{' '}
-            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">KYC_AML</code>, a{' '}
-            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">Digital Lending</code> product pulls{' '}
+            filters, no ranking. First, the product&apos;s declared categories (Step 1, multi-select)
+            pick which regulatory areas are worth testing at all — a{' '}
+            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">Payments</code> product only pulls{' '}
+            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">KYC_AML</code>, while a product
+            categorized as both{' '}
+            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">Digital Lending</code> and{' '}
+            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">Payments</code> pulls the union —{' '}
             <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">DLG</code> +{' '}
-            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">KYC_AML</code> (see{' '}
+            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">KYC_AML</code> — deduplicated (see{' '}
             <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">lib/categoryMapping.ts</code>).
-            Second, every clause within those selected areas — 19 total across both today — goes
-            to the model directly, no further filtering. A deliberate choice at this scale: the
-            report shows a verdict for every clause actually in scope, not a curated subset. Would
-            need real ranking if the corpus grew into the hundreds of clauses per area; it
-            hasn&apos;t yet.
+            Adding a category can only ever add area codes, never remove one another selected
+            category already required. Second, every clause within those selected areas — 19 total
+            across both today — goes to the model directly, no further filtering. A deliberate
+            choice at this scale: the report shows a verdict for every clause actually in scope,
+            not a curated subset. Would need real ranking if the corpus grew into the hundreds of
+            clauses per area; it hasn&apos;t yet.
           </p>
         </section>
 
         <section className="flex flex-col gap-4">
-          <SectionLabel index={5} label="Cost Protection" />
+          <SectionLabel index={5} label="AI Inference Layer" />
           <p className="text-sm text-muted leading-relaxed max-w-2xl">
-            Every Gemini-calling route checks and atomically increments a shared daily counter in{' '}
+            Every route that needs the AI inference engine calls it through one abstraction —{' '}
+            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">lib/ai/provider.ts</code> — instead
+            of importing a specific model provider&apos;s SDK directly. Routes, prompts, Zod
+            schemas, and every UI surface only ever know they&apos;re talking to &ldquo;the AI
+            inference engine&rdquo;; which model actually answers is an implementation detail
+            confined to that one file. Swapping the underlying provider means changing that file
+            alone — nothing in the assessment pipeline, admin dashboard, or this page would need
+            to change.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-4">
+          <SectionLabel index={6} label="Cost Protection" />
+          <p className="text-sm text-muted leading-relaxed max-w-2xl">
+            Every AI-inference-calling route checks and atomically increments a shared daily
+            counter in{' '}
             <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">daily_usage</code>{' '}
-            before calling Gemini — never after. Once the configured limit is reached, the request
-            is refused with no Gemini call made at all, and the UI shows a countdown to RegImpact&apos;s
-            own reset time rather than a raw error. Configurable via{' '}
+            before calling the inference engine — never after. Once the configured limit is
+            reached, the request is refused with no inference call made at all, and the UI shows a
+            countdown to RegImpact&apos;s own reset time rather than a raw error. Configurable via{' '}
             <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">MAX_DAILY_ASSESSMENTS</code>, no code
             change needed.
           </p>
         </section>
 
         <section className="flex flex-col gap-4">
-          <SectionLabel index={6} label="Current Scope" />
+          <SectionLabel index={7} label="Current Scope" />
           <div className="px-4 py-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
             <p className="text-sm text-amber-200 leading-relaxed">
               Two regulatory areas — DLG and KYC/AML — have corpus clauses to test against today.

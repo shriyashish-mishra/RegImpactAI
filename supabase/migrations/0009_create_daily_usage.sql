@@ -1,9 +1,10 @@
--- Hard cost protection: a shared daily counter of Gemini-calling requests
--- (synthesize + questions + generate all draw from the same counter, since
--- all three cost real API quota/tokens — gating only the entry point would
--- leave the other two routes callable directly with no limit). Once the
--- configured daily limit is reached, the app must refuse to call Gemini at
--- all rather than let the call through and fail downstream.
+-- Hard cost protection: a shared daily counter of AI-inference-calling
+-- requests (synthesize + questions + generate all draw from the same
+-- counter, since all three cost real API quota/tokens — gating only the
+-- entry point would leave the other two routes callable directly with no
+-- limit). Once the configured daily limit is reached, the app must refuse
+-- to call the inference engine at all rather than let the call through
+-- and fail downstream.
 --
 -- One row per calendar date (UTC, matching Postgres's default session
 -- timezone on Supabase) — a new day means a new row, which is the reset:
@@ -19,7 +20,7 @@ create table if not exists daily_usage (
 -- real count to 11. Returns allowed = false without incrementing once the
 -- limit is reached, leaving assessment_count exactly at p_limit forever
 -- (not counting rejected attempts) so the admin page always shows a real,
--- bounded number of actual Gemini calls made today.
+-- bounded number of actual AI inference calls made today.
 create or replace function increment_daily_usage(p_limit int)
 returns table (allowed boolean, used int) as $$
 declare

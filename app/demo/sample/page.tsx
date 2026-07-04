@@ -1,6 +1,6 @@
 // Zero-setup sample demo — renders a static, pre-built ReportData fixture
 // (lib/demo/sampleReport.ts) through the same ReportView used by the real
-// report page. No Supabase call, no Gemini call — works with no env
+// report page. No Supabase call, no AI inference call — works with no env
 // vars configured, so a reviewer can see a finished report immediately.
 
 import type { Metadata } from 'next'

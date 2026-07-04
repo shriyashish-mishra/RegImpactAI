@@ -1,4 +1,3 @@
-import { google } from '@ai-sdk/google'
 import { streamText, Output } from 'ai'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
@@ -6,7 +5,7 @@ import { getClausesByAreaCode, getClauseById } from '@/lib/corpus'
 import { getAssessableAreaCodes } from '@/lib/categoryMapping'
 import { buildGenerateSystemPrompt, buildGenerateUserPrompt } from '@/lib/prompts/generate'
 import { encodeStreamLine } from '@/lib/stream'
-import { requireEnv } from '@/lib/env'
+import { getInferenceModel, hasInferenceCredentials } from '@/lib/ai/provider'
 import { checkAndIncrementDailyQuota } from '@/lib/quota'
 import type { ConfirmedModel, Question, Finding, GenerateStreamEvent, QuotaExceededResponse, ProductCategory } from '@/lib/types'
 
@@ -24,13 +23,13 @@ const RequestSchema = z.object({
     assessment_id: z.string().min(1),
     product_name: z.string().min(1),
     structuredInfo: z.object({
-      product_name:     z.string().min(1),
-      industry:         z.string().min(1),
-      category:         z.string().min(1),
-      geography:        z.string().min(1),
-      target_customer:  z.string().min(1),
-      regulated_entity: z.string().min(1),
-      capabilities:     z.array(z.string()),
+      product_name:        z.string().min(1),
+      industry:            z.string().min(1),
+      categories:          z.array(z.string()),
+      geographies:         z.array(z.string()),
+      target_customers:    z.array(z.string()),
+      regulated_entities:  z.array(z.string()),
+      capabilities:        z.array(z.string()),
     }),
     elements: z.array(z.any()),
     triggered_areas: z.array(z.any()),
@@ -89,11 +88,9 @@ export async function POST(req: Request) {
   const questions = parsedRequest.data.questions as Question[]
   const assessmentId = confirmedModel.assessment_id
 
-  try {
-    requireEnv('GOOGLE_GENERATIVE_AI_API_KEY')
-  } catch (err) {
-    console.error('[generate]', err)
-    return Response.json({ error: 'Server misconfigured: missing GOOGLE_GENERATIVE_AI_API_KEY' }, { status: 500 })
+  if (!hasInferenceCredentials()) {
+    console.error('[generate] Missing AI inference credentials')
+    return Response.json({ error: 'Server misconfigured: missing AI inference credentials' }, { status: 500 })
   }
 
   let supabase: ReturnType<typeof createServerClient>
@@ -122,20 +119,21 @@ export async function POST(req: Request) {
 
       try {
         // Category-driven retrieval filtering: which areas are even worth
-        // testing is decided from the Step 1 category, not a fixed constant
-        // tested against every product regardless of what it actually is —
-        // a Wallet doesn't need Digital Lending Guidelines clauses. See
-        // lib/categoryMapping.ts.
-        const category = confirmedModel.structuredInfo.category as ProductCategory
-        const assessableAreaCodes = getAssessableAreaCodes(category)
+        // testing is decided from the Step 1 categories, not a fixed
+        // constant tested against every product regardless of what it
+        // actually is — a Payments-only product doesn't need Digital
+        // Lending Guidelines clauses. Multiple categories union their area
+        // codes rather than picking just one. See lib/categoryMapping.ts.
+        const categories = confirmedModel.structuredInfo.categories as ProductCategory[]
+        const assessableAreaCodes = getAssessableAreaCodes(categories)
 
-        emit({ type: 'step', text: `Category "${category}" → retrieving ${assessableAreaCodes.join(' + ')} clauses from the regulatory corpus…` })
+        emit({ type: 'step', text: `Categories [${categories.join(', ')}] → retrieving ${assessableAreaCodes.join(' + ')} clauses from the regulatory corpus…` })
         const clauses = assessableAreaCodes.flatMap(getClausesByAreaCode)
 
         emit({ type: 'step', text: `Testing ${clauses.length} clause${clauses.length === 1 ? '' : 's'} against ${confirmedModel.product_name}…` })
 
         const result = streamText({
-          model: google('gemini-2.5-flash'),
+          model: getInferenceModel(),
           system: buildGenerateSystemPrompt(),
           prompt: buildGenerateUserPrompt(confirmedModel, questions, clauses),
           temperature: 0.4,

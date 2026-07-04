@@ -71,7 +71,7 @@ export default async function AdminPage() {
           </div>
         </div>
         <p className="text-xs text-subtle pt-2">
-          Counts every Gemini call across synthesize, questions, and generate combined — not just completed assessments. See MAX_DAILY_ASSESSMENTS in .env.example.
+          Counts every AI inference call across synthesize, questions, and generate combined — not just completed assessments. See MAX_DAILY_ASSESSMENTS in .env.example.
         </p>
       </div>
 

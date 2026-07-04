@@ -3,26 +3,28 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
-import type { StructuredProductInfo, ProductCategory, TargetCustomer, RegulatedEntityType, Capability } from '@/lib/types'
+import ChipMultiSelect from '@/components/primitives/ChipMultiSelect'
+import type { StructuredProductInfo, ProductCategory, Geography, TargetCustomer, RegulatedEntityType, Capability } from '@/lib/types'
 
 type Props = {
   onComplete: (info: StructuredProductInfo) => void
 }
 
 const CATEGORIES: ProductCategory[] = [
-  'Digital Lending', 'BNPL', 'Payments', 'Wallet', 'Neobank',
-  'Invoice Financing', 'Wealth Management', 'Investment Platform',
-  'Insurance', 'Lending Marketplace', 'Other',
+  'Digital Lending', 'Payments', 'BNPL', 'Neobank', 'Invoice Financing',
+  'Investment Platform', 'Insurance', 'Merchant Financing',
+  'Lending Marketplace', 'Wealth Management', 'Other',
 ]
 
+const GEOGRAPHIES: Geography[] = ['India', 'Singapore', 'UAE', 'UK', 'EU', 'Other']
+
 const TARGET_CUSTOMERS: TargetCustomer[] = [
-  'Retail Consumers', 'SMEs', 'Enterprises', 'Merchants', 'Banks', 'NBFCs',
+  'Retail Consumers', 'SMEs', 'Merchants', 'Enterprises', 'Banks', 'NBFCs', 'Government',
 ]
 
 const REGULATED_ENTITIES: RegulatedEntityType[] = [
-  'RBI Regulated NBFC', 'Bank', 'FinTech partnered with NBFC',
-  'Payment Aggregator', 'PPI Issuer', 'Other',
+  'Partner NBFC', 'Scheduled Commercial Bank', 'Payment Aggregator', 'PPI Issuer',
+  'Account Aggregator', 'Insurance Company', 'Partner Bank', 'Other',
 ]
 
 const CAPABILITIES: Capability[] = [
@@ -34,27 +36,26 @@ const CAPABILITIES: Capability[] = [
 ]
 
 export default function ProductInfoScreen({ onComplete }: Props) {
-  const [productName, setProductName] = useState('')
-  const [category, setCategory] = useState<ProductCategory>('Digital Lending')
-  const [targetCustomer, setTargetCustomer] = useState<TargetCustomer>('Retail Consumers')
-  const [regulatedEntity, setRegulatedEntity] = useState<RegulatedEntityType>('FinTech partnered with NBFC')
+  const [productName, setProductName]   = useState('')
+  const [categories, setCategories]     = useState<ProductCategory[]>([])
+  // India pre-selected as a default *selection*, not a hardcoded business
+  // rule anywhere downstream — the user can remove it or add more.
+  const [geographies, setGeographies]   = useState<Geography[]>(['India'])
+  const [targetCustomers, setTargetCustomers] = useState<TargetCustomer[]>([])
+  const [regulatedEntities, setRegulatedEntities] = useState<RegulatedEntityType[]>([])
   const [capabilities, setCapabilities] = useState<Capability[]>([])
 
-  const canSubmit = productName.trim().length > 0
-
-  function toggleCapability(cap: Capability) {
-    setCapabilities(prev => prev.includes(cap) ? prev.filter(c => c !== cap) : [...prev, cap])
-  }
+  const canSubmit = productName.trim().length > 0 && categories.length > 0
 
   function handleSubmit() {
     if (!canSubmit) return
     onComplete({
-      product_name:     productName.trim(),
-      industry:         'FinTech',
-      category,
-      geography:        'India',
-      target_customer:  targetCustomer,
-      regulated_entity: regulatedEntity,
+      product_name:       productName.trim(),
+      industry:           'FinTech',
+      categories,
+      geographies,
+      target_customers:   targetCustomers,
+      regulated_entities: regulatedEntities,
       capabilities,
     })
   }
@@ -66,8 +67,10 @@ export default function ProductInfoScreen({ onComplete }: Props) {
           Basic product information
         </h1>
         <p className="text-muted text-sm leading-relaxed">
-          A few structured fields first — these give Gemini ground truth instead of making it
+          A few structured fields first — these give the AI ground truth instead of making it
           guess, which means fewer inferred assumptions later and a more accurate assessment.
+          Most products span more than one category, geography, or customer segment — select
+          everything that applies.
         </p>
       </div>
 
@@ -91,70 +94,18 @@ export default function ProductInfoScreen({ onComplete }: Props) {
             FinTech
           </div>
         </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-subtle uppercase tracking-wide">Operating Geography</label>
-          <div className="flex h-9 items-center rounded-md border border-border bg-surface-raised px-3 text-sm text-muted">
-            India
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="category" className="text-xs font-medium text-subtle uppercase tracking-wide">
-            Primary Product Category
-          </label>
-          <Select id="category" value={category} onChange={e => setCategory(e.target.value as ProductCategory)}>
-            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-          </Select>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="target-customer" className="text-xs font-medium text-subtle uppercase tracking-wide">
-            Target Customer
-          </label>
-          <Select id="target-customer" value={targetCustomer} onChange={e => setTargetCustomer(e.target.value as TargetCustomer)}>
-            {TARGET_CUSTOMERS.map(t => <option key={t} value={t}>{t}</option>)}
-          </Select>
-        </div>
-
-        <div className="flex flex-col gap-1.5 sm:col-span-2">
-          <label htmlFor="regulated-entity" className="text-xs font-medium text-subtle uppercase tracking-wide">
-            Regulated Entity
-          </label>
-          <Select id="regulated-entity" value={regulatedEntity} onChange={e => setRegulatedEntity(e.target.value as RegulatedEntityType)}>
-            {REGULATED_ENTITIES.map(r => <option key={r} value={r}>{r}</option>)}
-          </Select>
-        </div>
       </div>
 
-      <div className="flex flex-col gap-2.5">
-        <span className="text-xs font-medium text-subtle uppercase tracking-wide">
-          Secondary Capabilities <span className="text-subtle/70 normal-case">(select all that apply)</span>
+      <ChipMultiSelect label="Product Categories" options={CATEGORIES} selected={categories} onChange={setCategories} />
+      <ChipMultiSelect label="Operating Geographies" options={GEOGRAPHIES} selected={geographies} onChange={setGeographies} />
+      <ChipMultiSelect label="Target Customers" options={TARGET_CUSTOMERS} selected={targetCustomers} onChange={setTargetCustomers} />
+      <ChipMultiSelect label="Regulated Entities / Partners" options={REGULATED_ENTITIES} selected={regulatedEntities} onChange={setRegulatedEntities} />
+      <ChipMultiSelect label="Secondary Capabilities" options={CAPABILITIES} selected={capabilities} onChange={setCapabilities} />
+
+      <div className="flex items-center justify-between pt-2 border-t border-border">
+        <span className="text-xs text-subtle">
+          {categories.length === 0 ? 'Select at least one product category to continue' : ' '}
         </span>
-        <div className="flex flex-wrap gap-2">
-          {CAPABILITIES.map(cap => {
-            const selected = capabilities.includes(cap)
-            return (
-              <button
-                key={cap}
-                type="button"
-                onClick={() => toggleCapability(cap)}
-                aria-pressed={selected}
-                className={[
-                  'text-xs font-medium px-3 py-1.5 rounded-full border transition-colors',
-                  selected
-                    ? 'bg-accent/10 border-accent text-accent'
-                    : 'bg-surface-raised border-border text-muted hover:border-subtle hover:text-foreground',
-                ].join(' ')}
-              >
-                {cap}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      <div className="flex justify-end pt-2 border-t border-border">
         <Button variant="accent" onClick={handleSubmit} disabled={!canSubmit}>
           Continue →
         </Button>

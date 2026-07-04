@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 }
 
 const CONSTRAINTS = [
-  { label: 'Budget',      detail: '$0 — free-tier Gemini API and Supabase, by explicit choice, not a fallback.' },
+  { label: 'Budget',      detail: '$0 — free-tier AI inference and Supabase, by explicit choice, not a fallback.' },
   { label: 'Team',        detail: 'Solo build, portfolio timeline — not an enterprise team or roadmap.' },
   { label: 'Source data', detail: 'A verified source document existed for one regulatory area (DLG), not the second (KYC/AML).' },
 ]
@@ -42,7 +42,7 @@ const STRATEGIES = [
 const WHY_CARDS = [
   { title: 'Why AI', body: 'Reading a product description against a regulation is language work, not arithmetic. The value isn\'t raw speed — it\'s applying the same standard every time, consistently, which manual review can\'t guarantee across reviewers.' },
   { title: 'Why retrieval, not memory', body: 'Findings are tested against real clauses pulled from a corpus at request time, never recalled from training data. At 19 clauses today, that\'s a direct filter, not embeddings-based search — a deliberate, disclosed scope limit, not a hidden one. See the architecture walkthrough for the honest version.' },
-  { title: 'Why adaptive questioning', body: 'A generic intake form asks the same questions regardless of what you\'re building. Gemini only asks the 3-5 questions that would actually change the compliance answer for this specific product.' },
+  { title: 'Why adaptive questioning', body: 'A generic intake form asks the same questions regardless of what you\'re building. The AI inference engine only asks the 3-5 questions that would actually change the compliance answer for this specific product.' },
 ]
 
 const PIPELINE = [
@@ -59,8 +59,8 @@ const TRADEOFFS = [
     body: 'No verified source document existed for KYC/AML — only general regulatory knowledge. Options were: leave it out, ship it looking as trustworthy as the verified DLG clauses, or ship it with an explicit "unverified — needs legal review" flag that follows the citation everywhere it\'s shown. Chose the third — hiding the uncertainty would have contradicted the entire premise of the project.',
   },
   {
-    title: 'A daily hard quota, not trusting Gemini\'s own limit',
-    body: 'Discovered live, during this build, that Gemini\'s free-tier quota can be exhausted by normal testing volume. Rather than let the app depend on Google\'s own rate limiting (and fail with a raw error when it hits), RegImpact enforces its own configurable daily cap in Postgres and refuses to call Gemini at all once it\'s reached — a deliberate constraint, not an afterthought.',
+    title: 'A daily hard quota, not trusting the model provider\'s own limit',
+    body: 'Discovered live, during this build, that the AI inference engine\'s free-tier quota can be exhausted by normal testing volume. Rather than let the app depend on the provider\'s own rate limiting (and fail with a raw error when it hits), RegImpact enforces its own configurable daily cap in Postgres and refuses to call the inference engine at all once it\'s reached — a deliberate constraint, not an afterthought.',
   },
 ]
 
@@ -68,7 +68,7 @@ const STACK = [
   'Next.js (App Router) + React + TypeScript',
   'Tailwind CSS',
   'Supabase (Postgres)',
-  'Google Gemini, via the Vercel AI SDK',
+  'AI inference engine (interchangeable model provider), via the Vercel AI SDK',
   'Zod for schema validation at every AI boundary',
 ]
 

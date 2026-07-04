@@ -63,7 +63,7 @@ export default function SeedScreen({ structuredInfo, onComplete }: Props) {
           Describe your product&apos;s workflow
         </h1>
         <p className="text-muted text-sm leading-relaxed">
-          The structured fields already captured the basics — {structuredInfo.category.toLowerCase()},{' '}
+          The structured fields already captured the basics — {structuredInfo.categories.join(', ').toLowerCase() || 'your product categories'},{' '}
           {structuredInfo.capabilities.length > 0 ? `${structuredInfo.capabilities.length} capabilities, ` : ''}
           who it&apos;s for. Now describe the workflow, the customer journey, and any unique
           features that weren&apos;t captured above — the assessment focuses on this nuance.

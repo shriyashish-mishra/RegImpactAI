@@ -1,8 +1,7 @@
-import { google } from '@ai-sdk/google'
 import { generateObject, NoObjectGeneratedError } from 'ai'
 import { z } from 'zod'
 import { buildQuestionsSystemPrompt, buildQuestionsUserPrompt } from '@/lib/prompts/questions'
-import { requireEnv } from '@/lib/env'
+import { getInferenceModel, hasInferenceCredentials } from '@/lib/ai/provider'
 import { createServerClient } from '@/lib/supabase/server'
 import { checkAndIncrementDailyQuota } from '@/lib/quota'
 import type { ConfirmedModel, Question, QuestionsResponse, QuotaExceededResponse } from '@/lib/types'
@@ -14,13 +13,13 @@ const RequestSchema = z.object({
     assessment_id: z.string().min(1),
     product_name: z.string().min(1),
     structuredInfo: z.object({
-      product_name:     z.string().min(1),
-      industry:         z.string().min(1),
-      category:         z.string().min(1),
-      geography:        z.string().min(1),
-      target_customer:  z.string().min(1),
-      regulated_entity: z.string().min(1),
-      capabilities:     z.array(z.string()),
+      product_name:        z.string().min(1),
+      industry:            z.string().min(1),
+      categories:          z.array(z.string()),
+      geographies:         z.array(z.string()),
+      target_customers:    z.array(z.string()),
+      regulated_entities:  z.array(z.string()),
+      capabilities:        z.array(z.string()),
     }),
     elements: z.array(z.any()),
     triggered_areas: z.array(z.any()),
@@ -48,11 +47,9 @@ export async function POST(req: Request) {
   }
   const confirmedModel = parsedRequest.data.confirmedModel as ConfirmedModel
 
-  try {
-    requireEnv('GOOGLE_GENERATIVE_AI_API_KEY')
-  } catch (err) {
-    console.error('[questions]', err)
-    return Response.json({ error: 'Server misconfigured: missing GOOGLE_GENERATIVE_AI_API_KEY' }, { status: 500 })
+  if (!hasInferenceCredentials()) {
+    console.error('[questions] Missing AI inference credentials')
+    return Response.json({ error: 'Server misconfigured: missing AI inference credentials' }, { status: 500 })
   }
 
   let supabase: ReturnType<typeof createServerClient>
@@ -72,7 +69,7 @@ export async function POST(req: Request) {
   let questionsModel: z.infer<typeof QuestionsModelSchema>
   try {
     const result = await generateObject({
-      model: google('gemini-2.5-flash'),
+      model: getInferenceModel(),
       schema: QuestionsModelSchema,
       system: buildQuestionsSystemPrompt(),
       prompt: buildQuestionsUserPrompt(confirmedModel),
@@ -84,7 +81,7 @@ export async function POST(req: Request) {
       console.error('[questions] Model output failed schema validation:', err.cause)
       return Response.json({ error: 'Model returned an unexpected shape' }, { status: 502 })
     }
-    console.error('[questions] Gemini call failed:', err)
+    console.error('[questions] AI inference call failed:', err)
     return Response.json({ error: 'Failed to generate questions' }, { status: 502 })
   }
 

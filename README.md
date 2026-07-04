@@ -37,7 +37,7 @@ This project focuses on trust. Every compliance finding is backed by verified re
 * TypeScript
 * Tailwind CSS
 * Supabase
-* Google Gemini API
+* AI inference engine (interchangeable model provider — see `lib/ai/provider.ts`)
 * Vercel
 
 ## AI Workflow
@@ -72,14 +72,14 @@ npm run dev
 Create a `.env.local` file containing:
 
 ```text
-GOOGLE_GENERATIVE_AI_API_KEY=
+AI_INFERENCE_API_KEY=
 SUPABASE_URL=
 SUPABASE_ANON_KEY=
 
 # Required only for /admin (report history) — pick your own value
 ADMIN_PASSWORD=
 
-# Hard cost-protection cap: total Gemini calls allowed per day, shared
+# Hard cost-protection cap: total AI inference calls allowed per day, shared
 # across /api/synthesize, /api/questions, and /api/generate combined.
 # Defaults to 18 if unset.
 MAX_DAILY_ASSESSMENTS=
@@ -89,6 +89,14 @@ NEXT_PUBLIC_SITE_URL=
 NEXT_PUBLIC_GITHUB_URL=
 ```
 
+`AI_INFERENCE_API_KEY` is the provider-neutral env var this app documents
+and expects — which model provider actually answers is an implementation
+detail confined to `lib/ai/provider.ts` (currently one provider, chosen for
+its free tier; the rest of the app never references it by name). If you
+already have `GOOGLE_GENERATIVE_AI_API_KEY` set from an earlier setup, it
+still works as a fallback, but new setups should only ever set
+`AI_INFERENCE_API_KEY`.
+
 `SUPABASE_URL`/`SUPABASE_ANON_KEY` have no `NEXT_PUBLIC_` prefix — this app
 only talks to Supabase from the server, so the browser-exposure prefix
 isn't needed. These are also exactly the names Vercel's Supabase
@@ -96,12 +104,12 @@ integration provisions automatically if you connect a project via the
 Vercel dashboard instead of setting them by hand.
 
 RegImpact protects itself from unexpected API cost: once
-`MAX_DAILY_ASSESSMENTS` Gemini calls have been made today, every
-Gemini-calling route refuses the request before calling Gemini at all, and
-the UI shows a dedicated "capacity reached" screen with a live countdown to
-the next reset instead of a raw error. Usage is tracked in Supabase
-(`daily_usage` table), not in memory, so it survives deployments and
-resets automatically every 24 hours. See `/admin` for live usage.
+`MAX_DAILY_ASSESSMENTS` AI inference calls have been made today, every
+inference-calling route refuses the request before calling the model at
+all, and the UI shows a dedicated "capacity reached" screen with a live
+countdown to the next reset instead of a raw error. Usage is tracked in
+Supabase (`daily_usage` table), not in memory, so it survives deployments
+and resets automatically every 24 hours. See `/admin` for live usage.
 
 Then apply the SQL migrations in `supabase/migrations/` (in order) via the Supabase SQL Editor —
 see `supabase/migrations/README.md`.
@@ -110,7 +118,7 @@ see `supabase/migrations/README.md`.
 
 This runs entirely on free tiers — no paid infrastructure required:
 
-1. **Vercel**: import the GitHub repo, connect a Supabase project through Vercel's native Supabase integration (auto-provisions `SUPABASE_URL`/`SUPABASE_ANON_KEY`), then add `GOOGLE_GENERATIVE_AI_API_KEY` and `ADMIN_PASSWORD` manually in Project Settings → Environment Variables.
+1. **Vercel**: import the GitHub repo, connect a Supabase project through Vercel's native Supabase integration (auto-provisions `SUPABASE_URL`/`SUPABASE_ANON_KEY`), then add `AI_INFERENCE_API_KEY` and `ADMIN_PASSWORD` manually in Project Settings → Environment Variables.
 2. **Supabase**: run the migrations in `supabase/migrations/` in order via the SQL Editor (see `supabase/migrations/README.md`).
 3. Push to `main` — Vercel auto-deploys on every push.
 
@@ -129,8 +137,7 @@ MIT — see [LICENSE](./LICENSE). Fork it, use it, learn from it.
 
 ## Acknowledgements
 
-* [Google Gemini](https://ai.google.dev/) — the model behind every AI step in this project
-* [Vercel](https://vercel.com/) — hosting, and the [AI SDK](https://ai-sdk.dev/) used for structured generation and streaming
+* [Vercel](https://vercel.com/) — hosting, and the [AI SDK](https://ai-sdk.dev/) used for structured generation, streaming, and the provider-agnostic model interface behind `lib/ai/provider.ts`
 * [Supabase](https://supabase.com/) — Postgres persistence
 * RBI's [Digital Lending Guidelines](https://www.rbi.org.in/) (September 2022) — source for the verified DLG clauses in the regulatory corpus
 
