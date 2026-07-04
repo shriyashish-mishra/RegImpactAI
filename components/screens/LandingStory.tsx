@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Clock, Scale, HelpCircle, Search, MessageSquare, Database, Brain, ClipboardCheck, FileText, ShieldCheck } from 'lucide-react'
+import { Clock, Scale, HelpCircle, Search, MessageSquare, Database, Brain, ClipboardCheck, ShieldCheck } from 'lucide-react'
 import SectionLabel from '@/components/primitives/SectionLabel'
 import { Badge } from '@/components/ui/badge'
 
