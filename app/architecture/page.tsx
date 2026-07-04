@@ -22,9 +22,14 @@ const LAYERS = [
     why: 'Ground truth the system never has to guess at. Fewer inferred assumptions means fewer places for an AI reasoning error to enter the pipeline in the first place.',
   },
   {
-    name: 'Deterministic Retrieval Rules',
-    what: 'A plain lookup (lib/categoryMapping.ts) — no AI call — decides which regulatory areas even apply, before any inference happens.',
-    why: 'Cheaper and more auditable than asking a model to decide relevance every time. A rule either matches or it doesn\'t; that\'s testable in a way a model\'s judgment isn\'t.',
+    name: 'Rule Engine',
+    what: 'Two plain, no-AI lookups: which regulatory areas even apply to the declared categories (lib/categoryMapping.ts), and — per clause — whether anything in the structured inputs or description even touches its subject matter (lib/ruleEngine). A clause with zero signal is resolved right there as "insufficient information," never sent to the model.',
+    why: 'Deliberately narrow: it can only ever conclude "nothing to test," never "compliant" — mentioning a topic doesn\'t confirm the regulation\'s actual terms are met, so that judgment always goes to real reasoning. What it CAN decide safely, it decides for free, shrinking every downstream AI prompt for products with a small structured footprint.',
+  },
+  {
+    name: 'Assessment Cache',
+    what: 'Each of the three AI-calling stages (understand, discover, assess) checks a cache keyed on a hash of its normalized inputs before calling the model at all. A hit returns instantly and costs nothing against the daily AI quota; a miss calls the model once and stores the result.',
+    why: 'The single biggest lever for "AI calls prevented" — rules shrink a prompt, but a cache hit skips the call entirely. Versioned by prompt/rule/corpus/schema version, so a bump to any of them makes old entries simply stop matching new lookups — nothing is ever deleted, and a stale result is never returned as current.',
   },
   {
     name: 'AI Inference Layer',
@@ -86,9 +91,9 @@ export default function ArchitecturePage() {
             How it&apos;s built
           </h1>
           <p className="text-sm text-muted leading-relaxed max-w-2xl">
-            This isn&apos;t a single prompt with a chat interface on top. Deterministic rules decide
-            what to test before any model call happens, and compute the report after — AI reasoning
-            is bookended by logic the system can be held accountable to, not trusted blindly.
+            This isn&apos;t a single prompt with a chat interface on top. A rule engine and a
+            request cache both sit in front of every AI call, deciding what actually needs a model
+            at all — AI reasoning is the last resort in this pipeline, not the first step.
           </p>
           <div className="flex flex-wrap gap-2 pt-1">
             {['System Design', 'RAG', 'AI Orchestration', 'Explainable AI', 'Audit Trail'].map(tag => (
@@ -100,9 +105,9 @@ export default function ArchitecturePage() {
         <section className="flex flex-col gap-5">
           <SectionLabel index={1} label="System Design" />
           <p className="text-sm text-muted leading-relaxed max-w-2xl">
-            Seven layers, each with one job. AI reasoning only ever runs where language
-            understanding is genuinely needed — everything decidable by a plain rule is decided by
-            one, before or after the model is ever called.
+            Eight layers, each with one job. AI reasoning only ever runs where language
+            understanding is genuinely needed — everything decidable by a plain rule, or already
+            computed once before, is resolved without it.
           </p>
           <div className="flex flex-col gap-2">
             {LAYERS.map((layer, i) => (
@@ -216,7 +221,8 @@ export default function ArchitecturePage() {
             reached, the request is refused with no inference call made at all, and the UI shows a
             countdown to RegImpact&apos;s own reset time rather than a raw error. Configurable via{' '}
             <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">MAX_DAILY_ASSESSMENTS</code>, no code
-            change needed.
+            change needed. A cache hit or a rule-engine decision never reaches this counter at all —
+            since no AI call happened, none of the daily budget is spent on it.
           </p>
         </section>
 

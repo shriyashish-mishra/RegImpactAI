@@ -6,6 +6,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { createServerClient } from '@/lib/supabase/server'
 import { getDailyQuotaStatus } from '@/lib/quota'
+import { getOptimizationSnapshot } from '@/lib/cache/aiCache'
 import AdminLogoutButton from '@/components/admin/AdminLogoutButton'
 
 export const metadata: Metadata = {
@@ -27,12 +28,20 @@ type AssessmentListRow = {
 
 export default async function AdminPage() {
   const supabase = createServerClient()
-  const [{ data, error }, quota] = await Promise.all([
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+
+  const [{ data, error }, quota, optimization, { count: todaysAssessments }] = await Promise.all([
     supabase
       .from('assessments')
       .select('id, product_name, description, created_at, findings(count)')
       .order('created_at', { ascending: false }),
     getDailyQuotaStatus(supabase),
+    getOptimizationSnapshot(supabase),
+    supabase
+      .from('assessments')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', todayStart.toISOString()),
   ])
 
   const assessments = (data ?? []) as AssessmentListRow[]
@@ -72,6 +81,65 @@ export default async function AdminPage() {
         </div>
         <p className="text-xs text-subtle pt-2">
           Counts every AI inference call across synthesize, questions, and generate combined — not just completed assessments. See MAX_DAILY_ASSESSMENTS in .env.example.
+        </p>
+      </div>
+
+      <div className="mx-auto max-w-3xl px-6 pt-8">
+        <div className="flex items-center justify-between pb-3">
+          <span className="font-mono text-[11px] font-medium text-subtle uppercase tracking-wide">AI Optimization — Today</span>
+          <span className="text-xs text-subtle">Rule engine + cache impact</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border border border-border rounded-lg overflow-hidden">
+          <div className="bg-surface px-4 py-3 flex flex-col gap-1">
+            <span className="font-mono text-[11px] font-medium text-subtle uppercase tracking-wide">Assessments today</span>
+            <span className="text-lg font-semibold text-foreground">{todaysAssessments ?? 0}</span>
+          </div>
+          <div className="bg-surface px-4 py-3 flex flex-col gap-1">
+            <span className="font-mono text-[11px] font-medium text-subtle uppercase tracking-wide">AI requests today</span>
+            <span className="text-lg font-semibold text-foreground">{quota.used}</span>
+          </div>
+          <div className="bg-surface px-4 py-3 flex flex-col gap-1">
+            <span className="font-mono text-[11px] font-medium text-subtle uppercase tracking-wide">Rule engine decisions</span>
+            <span className="text-lg font-semibold text-foreground">{optimization.ruleEngineDecisions}</span>
+          </div>
+          <div className="bg-surface px-4 py-3 flex flex-col gap-1">
+            <span className="font-mono text-[11px] font-medium text-subtle uppercase tracking-wide">Cache hit rate</span>
+            <span className="text-lg font-semibold text-accent">{optimization.cacheHitRate}%</span>
+          </div>
+          <div className="bg-surface px-4 py-3 flex flex-col gap-1">
+            <span className="font-mono text-[11px] font-medium text-subtle uppercase tracking-wide">Cache hits</span>
+            <span className="text-lg font-semibold text-foreground">{optimization.cacheHits}</span>
+          </div>
+          <div className="bg-surface px-4 py-3 flex flex-col gap-1">
+            <span className="font-mono text-[11px] font-medium text-subtle uppercase tracking-wide">Cache misses</span>
+            <span className="text-lg font-semibold text-foreground">{optimization.cacheMisses}</span>
+          </div>
+          <div className="bg-surface px-4 py-3 flex flex-col gap-1">
+            <span className="font-mono text-[11px] font-medium text-subtle uppercase tracking-wide">AI calls prevented</span>
+            <span className="text-lg font-semibold text-accent">{optimization.cacheHits}</span>
+          </div>
+          <div className="bg-surface px-4 py-3 flex flex-col gap-1">
+            <span className="font-mono text-[11px] font-medium text-subtle uppercase tracking-wide">Est. tokens saved</span>
+            <span className="text-lg font-semibold text-foreground">{optimization.estimatedTokensSaved.toLocaleString()}</span>
+          </div>
+          <div className="bg-surface px-4 py-3 flex flex-col gap-1">
+            <span className="font-mono text-[11px] font-medium text-subtle uppercase tracking-wide">Avg. AI response time</span>
+            <span className="text-lg font-semibold text-foreground">{optimization.avgAiCallMs !== null ? `${(optimization.avgAiCallMs / 1000).toFixed(1)}s` : '—'}</span>
+          </div>
+          <div className="bg-surface px-4 py-3 flex flex-col gap-1">
+            <span className="font-mono text-[11px] font-medium text-subtle uppercase tracking-wide">Avg. cached response time</span>
+            <span className="text-lg font-semibold text-accent">{optimization.avgCachedResponseMs !== null ? `${optimization.avgCachedResponseMs}ms` : '—'}</span>
+          </div>
+          <div className="bg-surface px-4 py-3 flex flex-col gap-1">
+            <span className="font-mono text-[11px] font-medium text-subtle uppercase tracking-wide">Daily limit / remaining</span>
+            <span className="text-lg font-semibold text-foreground">{quota.limit} / {remaining}</span>
+          </div>
+        </div>
+        <p className="text-xs text-subtle pt-2">
+          Rule engine decisions never claim compliant or non-compliant — only that no AI call was
+          needed to say &ldquo;insufficient information.&rdquo; Estimated tokens saved combines a
+          real observed average (cache hits) with a disclosed per-clause estimate (rule engine
+          decisions) — see <code className="font-mono">lib/cache/aiCache.ts</code>.
         </p>
       </div>
 

@@ -3,10 +3,13 @@ import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
 import { getClausesByAreaCode, getClauseById } from '@/lib/corpus'
 import { getAssessableAreaCodes } from '@/lib/categoryMapping'
+import { applyRuleEngine } from '@/lib/ruleEngine'
 import { buildGenerateSystemPrompt, buildGenerateUserPrompt } from '@/lib/prompts/generate'
 import { encodeStreamLine } from '@/lib/stream'
 import { getInferenceModel, hasInferenceCredentials } from '@/lib/ai/provider'
 import { checkAndIncrementDailyQuota } from '@/lib/quota'
+import { hashPayload } from '@/lib/cache/normalize'
+import { getCachedResponse, setCachedResponse, recordOptimizationMetric } from '@/lib/cache/aiCache'
 import type { ConfirmedModel, Question, Finding, GenerateStreamEvent, QuotaExceededResponse, ProductCategory } from '@/lib/types'
 
 // Phase 1 made every finding much richer (classification, confidence
@@ -72,6 +75,8 @@ const FindingSchema = z.object({
   recommendations: z.array(z.string().min(1)).min(1),
 })
 
+type FindingShape = z.infer<typeof FindingSchema>
+
 export async function POST(req: Request) {
   let body: unknown
   try {
@@ -88,11 +93,6 @@ export async function POST(req: Request) {
   const questions = parsedRequest.data.questions as Question[]
   const assessmentId = confirmedModel.assessment_id
 
-  if (!hasInferenceCredentials()) {
-    console.error('[generate] Missing AI inference credentials')
-    return Response.json({ error: 'Server misconfigured: missing AI inference credentials' }, { status: 500 })
-  }
-
   let supabase: ReturnType<typeof createServerClient>
   try {
     supabase = createServerClient()
@@ -101,13 +101,63 @@ export async function POST(req: Request) {
     return Response.json({ error: 'Server misconfigured: missing Supabase environment variables' }, { status: 500 })
   }
 
-  // Checked before the stream opens — this is a plain JSON response, not a
-  // stream, so the client's existing `!res.ok` handling picks it up the same
-  // way it already handles other pre-stream errors below.
-  const quota = await checkAndIncrementDailyQuota(supabase)
-  if (!quota.allowed) {
-    const response: QuotaExceededResponse = { error: 'quota_exceeded', used: quota.used, limit: quota.limit, resetAt: quota.resetAt }
-    return Response.json(response, { status: 429 })
+  // Category-driven retrieval filtering: which areas are even worth testing
+  // is decided from the Step 1 categories, not a fixed constant tested
+  // against every product regardless of what it actually is. See
+  // lib/categoryMapping.ts.
+  const categories = confirmedModel.structuredInfo.categories as ProductCategory[]
+  const assessableAreaCodes = getAssessableAreaCodes(categories)
+  const allClauses = assessableAreaCodes.flatMap(getClausesByAreaCode)
+
+  // Rule engine runs first, always, for free — see lib/ruleEngine. It can
+  // only produce info_required (never a false compliant/non_compliant), so
+  // running it before deciding anything about AI is risk-free.
+  const { remainingClauses, ruleFindings } = applyRuleEngine(
+    allClauses,
+    confirmedModel.structuredInfo,
+    confirmedModel.elements,
+    ''
+  )
+  if (ruleFindings.length > 0) {
+    await recordOptimizationMetric(supabase, { ruleEngineDecisions: ruleFindings.length })
+  }
+
+  // Everything below this point decides whether AI is needed AT ALL, and if
+  // so, checks credentials/quota — all before the stream opens, exactly
+  // like the quota check used to work, so a rejected/cache-covered request
+  // never reaches the AI inference engine and never touches the daily
+  // budget for work that cost nothing.
+  let cachedFindings: FindingShape[] | null = null
+  const cacheKey = remainingClauses.length > 0
+    ? hashPayload({
+        productName: confirmedModel.product_name,
+        structuredInfo: confirmedModel.structuredInfo,
+        elements: confirmedModel.elements,
+        questions: questions.map(q => ({ prompt: q.prompt, answer: q.answer })),
+        clauseIds: remainingClauses.map(c => c.id).sort(),
+      })
+    : null
+
+  if (cacheKey) {
+    const cacheStart = Date.now()
+    cachedFindings = await getCachedResponse<FindingShape[]>(supabase, 'generate', cacheKey)
+    if (cachedFindings) {
+      await recordOptimizationMetric(supabase, { cacheHits: 1, cachedResponseMs: Date.now() - cacheStart })
+    } else if (remainingClauses.length > 0) {
+      if (!hasInferenceCredentials()) {
+        console.error('[generate] Missing AI inference credentials')
+        return Response.json({ error: 'Server misconfigured: missing AI inference credentials' }, { status: 500 })
+      }
+
+      // Checked before the stream opens — this is a plain JSON response, not
+      // a stream, so the client's existing `!res.ok` handling picks it up
+      // the same way it already handles other pre-stream errors.
+      const quota = await checkAndIncrementDailyQuota(supabase)
+      if (!quota.allowed) {
+        const response: QuotaExceededResponse = { error: 'quota_exceeded', used: quota.used, limit: quota.limit, resetAt: quota.resetAt }
+        return Response.json(response, { status: 429 })
+      }
+    }
   }
 
   const stream = new ReadableStream<Uint8Array>({
@@ -117,101 +167,14 @@ export async function POST(req: Request) {
         controller.enqueue(encoder.encode(encodeStreamLine(event)))
       }
 
-      try {
-        // Category-driven retrieval filtering: which areas are even worth
-        // testing is decided from the Step 1 categories, not a fixed
-        // constant tested against every product regardless of what it
-        // actually is — a Payments-only product doesn't need Digital
-        // Lending Guidelines clauses. Multiple categories union their area
-        // codes rather than picking just one. See lib/categoryMapping.ts.
-        const categories = confirmedModel.structuredInfo.categories as ProductCategory[]
-        const assessableAreaCodes = getAssessableAreaCodes(categories)
-
-        emit({ type: 'step', text: `Categories [${categories.join(', ')}] → retrieving ${assessableAreaCodes.join(' + ')} clauses from the regulatory corpus…` })
-        const clauses = assessableAreaCodes.flatMap(getClausesByAreaCode)
-
-        emit({ type: 'step', text: `Testing ${clauses.length} clause${clauses.length === 1 ? '' : 's'} against ${confirmedModel.product_name}…` })
-
-        const result = streamText({
-          model: getInferenceModel(),
-          system: buildGenerateSystemPrompt(),
-          prompt: buildGenerateUserPrompt(confirmedModel, questions, clauses),
-          temperature: 0.4,
-          output: Output.array({ element: FindingSchema }),
-        })
-
-        let count = 0
-        let flagged = 0
-        for await (const f of result.elementStream) {
-          count++
-          if (f.classification !== 'compliant') flagged++
-          const { data: findingRow, error: findingErr } = await supabase
-            .from('findings')
-            .insert({
-              assessment_id: assessmentId,
-              area_code: f.area_code,
-              area_name: f.area_name,
-              title: f.title,
-              classification: f.classification,
-              what_found: f.what_found,
-              why_matters: f.why_matters,
-              severity: f.severity,
-              confidence: f.confidence,
-              confidence_reasoning: f.confidence_reasoning,
-              driver_clarity: f.driver_clarity,
-              driver_understanding: f.driver_understanding,
-              evidence_found: f.evidence_found,
-              evidence_missing: f.evidence_missing,
-              inference_made: f.inference_made,
-            })
-            .select('id')
-            .single()
-
-          if (findingErr || !findingRow) {
-            console.error('[generate] Failed to persist finding:', findingErr)
-            continue
-          }
-
-          const findingId = findingRow.id as string
-
-          // verified is resolved from the trusted corpus, never taken from the
-          // model's own output — a hallucinated or paraphrased citation must
-          // never inherit a source clause's verified: true.
-          const citations = f.citations.map(c => ({
-            ...c,
-            verified: getClauseById(c.corpus_clause_id)?.verified ?? false,
-          }))
-          for (const c of citations) {
-            emit({ type: 'step', text: `Verifying citation: ${c.clause_ref}…` })
-          }
-
-          if (f.impacts.length > 0) {
-            await supabase.from('finding_impacts').insert(
-              f.impacts.map(imp => ({ finding_id: findingId, lens: imp.lens, description: imp.description }))
-            )
-          }
-
-          if (citations.length > 0) {
-            await supabase.from('finding_citations').insert(
-              citations.map(c => ({
-                finding_id: findingId,
-                corpus_clause_id: c.corpus_clause_id,
-                clause_ref: c.clause_ref,
-                clause_text: c.clause_text,
-                source_title: c.source_title,
-                verified: c.verified,
-              }))
-            )
-          }
-
-          if (f.recommendations.length > 0) {
-            await supabase.from('recommendations').insert(
-              f.recommendations.map((text, i) => ({ finding_id: findingId, text, priority: i + 1 }))
-            )
-          }
-
-          const finding: Finding = {
-            id: findingId,
+      // Shared by rule-engine findings, cache-replayed findings, and
+      // freshly-streamed AI findings — one finding looks identical to the
+      // client no matter which of the three produced it, per the "user
+      // should never know which engine produced which finding" requirement.
+      async function persistAndEmit(f: FindingShape) {
+        const { data: findingRow, error: findingErr } = await supabase
+          .from('findings')
+          .insert({
             assessment_id: assessmentId,
             area_code: f.area_code,
             area_name: f.area_name,
@@ -227,11 +190,121 @@ export async function POST(req: Request) {
             evidence_found: f.evidence_found,
             evidence_missing: f.evidence_missing,
             inference_made: f.inference_made,
-            impacts: f.impacts,
-            citations,
-            recommendations: f.recommendations,
+          })
+          .select('id')
+          .single()
+
+        if (findingErr || !findingRow) {
+          console.error('[generate] Failed to persist finding:', findingErr)
+          return
+        }
+
+        const findingId = findingRow.id as string
+
+        // verified is resolved from the trusted corpus, never taken from the
+        // model's own output — a hallucinated or paraphrased citation must
+        // never inherit a source clause's verified: true.
+        const citations = f.citations.map(c => ({
+          ...c,
+          verified: getClauseById(c.corpus_clause_id)?.verified ?? false,
+        }))
+        for (const c of citations) {
+          emit({ type: 'step', text: `Verifying citation: ${c.clause_ref}…` })
+        }
+
+        if (f.impacts.length > 0) {
+          await supabase.from('finding_impacts').insert(
+            f.impacts.map(imp => ({ finding_id: findingId, lens: imp.lens, description: imp.description }))
+          )
+        }
+
+        if (citations.length > 0) {
+          await supabase.from('finding_citations').insert(
+            citations.map(c => ({
+              finding_id: findingId,
+              corpus_clause_id: c.corpus_clause_id,
+              clause_ref: c.clause_ref,
+              clause_text: c.clause_text,
+              source_title: c.source_title,
+              verified: c.verified,
+            }))
+          )
+        }
+
+        if (f.recommendations.length > 0) {
+          await supabase.from('recommendations').insert(
+            f.recommendations.map((text, i) => ({ finding_id: findingId, text, priority: i + 1 }))
+          )
+        }
+
+        const finding: Finding = {
+          id: findingId,
+          assessment_id: assessmentId,
+          area_code: f.area_code,
+          area_name: f.area_name,
+          title: f.title,
+          classification: f.classification,
+          what_found: f.what_found,
+          why_matters: f.why_matters,
+          severity: f.severity,
+          confidence: f.confidence,
+          confidence_reasoning: f.confidence_reasoning,
+          driver_clarity: f.driver_clarity,
+          driver_understanding: f.driver_understanding,
+          evidence_found: f.evidence_found,
+          evidence_missing: f.evidence_missing,
+          inference_made: f.inference_made,
+          impacts: f.impacts,
+          citations,
+          recommendations: f.recommendations,
+        }
+        emit({ type: 'finding', finding })
+      }
+
+      try {
+        emit({ type: 'step', text: `Categories [${categories.join(', ')}] → retrieving ${assessableAreaCodes.join(' + ')} clauses from the regulatory corpus…` })
+
+        if (ruleFindings.length > 0) {
+          emit({ type: 'step', text: `Rule engine resolved ${ruleFindings.length} clause${ruleFindings.length === 1 ? '' : 's'} deterministically — no AI call needed.` })
+          for (const rf of ruleFindings) {
+            await persistAndEmit(rf as FindingShape)
           }
-          emit({ type: 'finding', finding })
+        }
+
+        let count = ruleFindings.length
+        let flagged = ruleFindings.length // all rule findings are info_required, i.e. flagged
+
+        if (remainingClauses.length > 0) {
+          emit({ type: 'step', text: `Testing ${remainingClauses.length} clause${remainingClauses.length === 1 ? '' : 's'} against ${confirmedModel.product_name}…` })
+
+          if (cachedFindings) {
+            for (const f of cachedFindings) {
+              count++
+              if (f.classification !== 'compliant') flagged++
+              await persistAndEmit(f)
+            }
+          } else {
+            const aiCallStart = Date.now()
+            const result = streamText({
+              model: getInferenceModel(),
+              system: buildGenerateSystemPrompt(),
+              prompt: buildGenerateUserPrompt(confirmedModel, questions, remainingClauses),
+              temperature: 0.4,
+              output: Output.array({ element: FindingSchema }),
+            })
+
+            const freshFindings: FindingShape[] = []
+            for await (const f of result.elementStream) {
+              count++
+              if (f.classification !== 'compliant') flagged++
+              freshFindings.push(f)
+              await persistAndEmit(f)
+            }
+
+            const usage = await result.usage
+            await recordOptimizationMetric(supabase, { cacheMisses: 1, aiCallMs: Date.now() - aiCallStart, aiTokens: usage.totalTokens ?? 0 })
+            if (cacheKey) await setCachedResponse(supabase, 'generate', cacheKey, freshFindings)
+          }
         }
 
         emit({ type: 'step', text: 'Preparing report…' })

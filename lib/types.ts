@@ -220,6 +220,14 @@ export type CorpusClause = {
   // been checked against the current regulation — must be surfaced in the UI,
   // never presented as an equally-trustworthy citation.
   verified:     boolean
+  // Lowercase phrases the rule engine (lib/ruleEngine) checks for anywhere in
+  // structured capabilities or the free-text description. Used ONLY to detect
+  // a total absence of signal — if none match, the clause is safely
+  // pre-classified info_required without an AI call. Presence of a match
+  // never auto-classifies compliant; it just means the clause still needs
+  // full AI reasoning, since mentioning something doesn't confirm it meets
+  // the regulation's actual terms.
+  keywords:     string[]
 }
 
 

@@ -4,6 +4,8 @@ import { createServerClient } from '@/lib/supabase/server'
 import { buildSynthesizeSystemPrompt, buildSynthesizeUserPrompt } from '@/lib/prompts/synthesize'
 import { getInferenceModel, hasInferenceCredentials } from '@/lib/ai/provider'
 import { checkAndIncrementDailyQuota } from '@/lib/quota'
+import { hashPayload } from '@/lib/cache/normalize'
+import { getCachedResponse, setCachedResponse, recordOptimizationMetric } from '@/lib/cache/aiCache'
 import type { SynthesisResponse, QuotaExceededResponse, DraftModel, StructuredProductInfo } from '@/lib/types'
 
 export const maxDuration = 60
@@ -43,6 +45,8 @@ const DraftModelSchema = z.object({
   })),
 })
 
+type GeneratedShape = z.infer<typeof DraftModelSchema>
+
 export async function POST(req: Request) {
   let body: unknown
   try {
@@ -61,11 +65,6 @@ export async function POST(req: Request) {
   const { description } = parsedRequest.data
   const structuredInfo = parsedRequest.data.structuredInfo as StructuredProductInfo
 
-  if (!hasInferenceCredentials()) {
-    console.error('[synthesize] Missing AI inference credentials')
-    return Response.json({ error: 'Server misconfigured: missing AI inference credentials' }, { status: 500 })
-  }
-
   let supabase: ReturnType<typeof createServerClient>
   try {
     supabase = createServerClient()
@@ -74,31 +73,54 @@ export async function POST(req: Request) {
     return Response.json({ error: 'Server misconfigured: missing Supabase environment variables' }, { status: 500 })
   }
 
-  // Checked and consumed before the inference call, never after — a
-  // rejected request must never reach the AI inference engine. See lib/quota.ts.
-  const quota = await checkAndIncrementDailyQuota(supabase)
-  if (!quota.allowed) {
-    const response: QuotaExceededResponse = { error: 'quota_exceeded', used: quota.used, limit: quota.limit, resetAt: quota.resetAt }
-    return Response.json(response, { status: 429 })
-  }
+  // Cache is checked before the quota, not after — a cache hit costs zero
+  // AI calls, so it must never consume the daily cost-protection budget.
+  // See lib/cache/aiCache.ts.
+  const cacheKey = hashPayload({ structuredInfo, description })
+  const cacheStart = Date.now()
+  const cached = await getCachedResponse<GeneratedShape>(supabase, 'synthesize', cacheKey)
 
-  let generated: z.infer<typeof DraftModelSchema>
-  try {
-    const result = await generateObject({
-      model: getInferenceModel(),
-      schema: DraftModelSchema,
-      system: buildSynthesizeSystemPrompt(),
-      prompt: buildSynthesizeUserPrompt(structuredInfo, description),
-      temperature: 0.4,
-    })
-    generated = result.object
-  } catch (err) {
-    if (NoObjectGeneratedError.isInstance(err)) {
-      console.error('[synthesize] Model output failed schema validation:', err.cause)
-      return Response.json({ error: 'Model returned an unexpected shape' }, { status: 502 })
+  let generated: GeneratedShape
+  if (cached) {
+    generated = cached
+    await recordOptimizationMetric(supabase, { cacheHits: 1, cachedResponseMs: Date.now() - cacheStart })
+  } else {
+    if (!hasInferenceCredentials()) {
+      console.error('[synthesize] Missing AI inference credentials')
+      return Response.json({ error: 'Server misconfigured: missing AI inference credentials' }, { status: 500 })
     }
-    console.error('[synthesize] AI inference call failed:', err)
-    return Response.json({ error: 'Failed to analyse product description' }, { status: 502 })
+
+    // Checked and consumed before the inference call, never after — a
+    // rejected request must never reach the AI inference engine. See lib/quota.ts.
+    const quota = await checkAndIncrementDailyQuota(supabase)
+    if (!quota.allowed) {
+      const response: QuotaExceededResponse = { error: 'quota_exceeded', used: quota.used, limit: quota.limit, resetAt: quota.resetAt }
+      return Response.json(response, { status: 429 })
+    }
+
+    const aiCallStart = Date.now()
+    let totalTokens = 0
+    try {
+      const result = await generateObject({
+        model: getInferenceModel(),
+        schema: DraftModelSchema,
+        system: buildSynthesizeSystemPrompt(),
+        prompt: buildSynthesizeUserPrompt(structuredInfo, description),
+        temperature: 0.4,
+      })
+      generated = result.object
+      totalTokens = result.usage.totalTokens ?? 0
+    } catch (err) {
+      if (NoObjectGeneratedError.isInstance(err)) {
+        console.error('[synthesize] Model output failed schema validation:', err.cause)
+        return Response.json({ error: 'Model returned an unexpected shape' }, { status: 502 })
+      }
+      console.error('[synthesize] AI inference call failed:', err)
+      return Response.json({ error: 'Failed to analyse product description' }, { status: 502 })
+    }
+
+    await recordOptimizationMetric(supabase, { cacheMisses: 1, aiCallMs: Date.now() - aiCallStart, aiTokens: totalTokens })
+    await setCachedResponse(supabase, 'synthesize', cacheKey, generated)
   }
 
   const { data: inserted, error: dbError } = await supabase
