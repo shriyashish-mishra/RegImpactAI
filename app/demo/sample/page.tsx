@@ -8,7 +8,15 @@ import Link from 'next/link'
 import SiteHeader from '@/components/shell/SiteHeader'
 import ReportView from '@/components/report/ReportView'
 import PrintButton from '@/components/report/PrintButton'
+import AssessmentJourney from '@/components/report/AssessmentJourney'
+import { Badge } from '@/components/ui/badge'
 import { SAMPLE_REPORT } from '@/lib/demo/sampleReport'
+import { JOURNEY_STRUCTURED_INFO, JOURNEY_DESCRIPTION, JOURNEY_INFERRED_ELEMENTS, JOURNEY_QUESTIONS } from '@/lib/demo/sampleJourney'
+import { getClausesByAreaCode } from '@/lib/corpus'
+import { getAssessableAreaCodes } from '@/lib/categoryMapping'
+
+const journeyAreaCodes = getAssessableAreaCodes(JOURNEY_STRUCTURED_INFO.categories)
+const journeyClauseCount = journeyAreaCodes.reduce((sum, code) => sum + getClausesByAreaCode(code).length, 0)
 
 const TITLE = 'Sample Report — RegImpact AI'
 const DESCRIPTION = 'A zero-setup sample regulatory impact assessment — no API keys needed.'
@@ -36,7 +44,24 @@ export default function SampleDemoPage() {
               Try the real flow →
             </Link>
           </p>
+          <div className="flex flex-wrap gap-2 pt-3">
+            {['Retrieval-Augmented Generation', 'Citation Verification', 'Explainable AI', 'Executive Reporting'].map(tag => (
+              <Badge key={tag} variant="outline" className="rounded-full text-[10px]">{tag}</Badge>
+            ))}
+          </div>
         </div>
+      </div>
+
+      <div className="print:hidden mx-auto max-w-3xl px-6 pt-6">
+        <AssessmentJourney
+          structuredInfo={JOURNEY_STRUCTURED_INFO}
+          description={JOURNEY_DESCRIPTION}
+          inferredElements={JOURNEY_INFERRED_ELEMENTS}
+          questions={JOURNEY_QUESTIONS}
+          findings={SAMPLE_REPORT.findings}
+          areaCount={journeyAreaCodes.length}
+          clauseCount={journeyClauseCount}
+        />
       </div>
 
       <div className="print:hidden mx-auto max-w-3xl px-6 pt-6 flex justify-end">
