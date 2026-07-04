@@ -72,6 +72,10 @@ export async function POST(req: Request) {
     questionsModel = cached
     await recordOptimizationMetric(supabase, { cacheHits: 1, cachedResponseMs: Date.now() - cacheStart })
   } else {
+    // Recorded here, not after the AI call succeeds — a cache miss is a
+    // cache miss regardless of what happens next.
+    await recordOptimizationMetric(supabase, { cacheMisses: 1 })
+
     if (!hasInferenceCredentials()) {
       console.error('[questions] Missing AI inference credentials')
       return Response.json({ error: 'Server misconfigured: missing AI inference credentials' }, { status: 500 })
@@ -104,7 +108,7 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Failed to generate questions' }, { status: 502 })
     }
 
-    await recordOptimizationMetric(supabase, { cacheMisses: 1, aiCallMs: Date.now() - aiCallStart, aiTokens: totalTokens })
+    await recordOptimizationMetric(supabase, { aiCallMs: Date.now() - aiCallStart, aiTokens: totalTokens })
     await setCachedResponse(supabase, 'questions', cacheKey, questionsModel)
   }
 
