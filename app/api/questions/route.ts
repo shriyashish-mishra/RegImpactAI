@@ -13,6 +13,15 @@ const RequestSchema = z.object({
   confirmedModel: z.object({
     assessment_id: z.string().min(1),
     product_name: z.string().min(1),
+    structuredInfo: z.object({
+      product_name:     z.string().min(1),
+      industry:         z.string().min(1),
+      category:         z.string().min(1),
+      geography:        z.string().min(1),
+      target_customer:  z.string().min(1),
+      regulated_entity: z.string().min(1),
+      capabilities:     z.array(z.string()),
+    }),
     elements: z.array(z.any()),
     triggered_areas: z.array(z.any()),
   }),

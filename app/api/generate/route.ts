@@ -3,11 +3,12 @@ import { streamText, Output } from 'ai'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
 import { getClausesByAreaCode, getClauseById } from '@/lib/corpus'
+import { getAssessableAreaCodes } from '@/lib/categoryMapping'
 import { buildGenerateSystemPrompt, buildGenerateUserPrompt } from '@/lib/prompts/generate'
 import { encodeStreamLine } from '@/lib/stream'
 import { requireEnv } from '@/lib/env'
 import { checkAndIncrementDailyQuota } from '@/lib/quota'
-import type { ConfirmedModel, Question, Finding, GenerateStreamEvent, QuotaExceededResponse } from '@/lib/types'
+import type { ConfirmedModel, Question, Finding, GenerateStreamEvent, QuotaExceededResponse, ProductCategory } from '@/lib/types'
 
 // Phase 1 made every finding much richer (classification, confidence
 // reasoning, evidence found/missing, inference) and the model now produces
@@ -22,6 +23,15 @@ const RequestSchema = z.object({
   confirmedModel: z.object({
     assessment_id: z.string().min(1),
     product_name: z.string().min(1),
+    structuredInfo: z.object({
+      product_name:     z.string().min(1),
+      industry:         z.string().min(1),
+      category:         z.string().min(1),
+      geography:        z.string().min(1),
+      target_customer:  z.string().min(1),
+      regulated_entity: z.string().min(1),
+      capabilities:     z.array(z.string()),
+    }),
     elements: z.array(z.any()),
     triggered_areas: z.array(z.any()),
   }),
@@ -62,9 +72,6 @@ const FindingSchema = z.object({
   })).min(1),
   recommendations: z.array(z.string().min(1)).min(1),
 })
-
-/** Only these areas have clauses in the corpus — the only ones worth calling the model for. */
-const ASSESSABLE_AREA_CODES = ['DLG', 'KYC_AML']
 
 export async function POST(req: Request) {
   let body: unknown
@@ -114,8 +121,16 @@ export async function POST(req: Request) {
       }
 
       try {
-        emit({ type: 'step', text: `Retrieving ${ASSESSABLE_AREA_CODES.join(' + ')} clauses from the regulatory corpus…` })
-        const clauses = ASSESSABLE_AREA_CODES.flatMap(getClausesByAreaCode)
+        // Category-driven retrieval filtering: which areas are even worth
+        // testing is decided from the Step 1 category, not a fixed constant
+        // tested against every product regardless of what it actually is —
+        // a Wallet doesn't need Digital Lending Guidelines clauses. See
+        // lib/categoryMapping.ts.
+        const category = confirmedModel.structuredInfo.category as ProductCategory
+        const assessableAreaCodes = getAssessableAreaCodes(category)
+
+        emit({ type: 'step', text: `Category "${category}" → retrieving ${assessableAreaCodes.join(' + ')} clauses from the regulatory corpus…` })
+        const clauses = assessableAreaCodes.flatMap(getClausesByAreaCode)
 
         emit({ type: 'step', text: `Testing ${clauses.length} clause${clauses.length === 1 ? '' : 's'} against ${confirmedModel.product_name}…` })
 

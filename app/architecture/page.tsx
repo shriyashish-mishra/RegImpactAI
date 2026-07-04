@@ -106,13 +106,20 @@ export default function ArchitecturePage() {
         <section className="flex flex-col gap-4">
           <SectionLabel index={4} label="Retrieval" />
           <p className="text-sm text-muted leading-relaxed max-w-2xl">
-            Not embeddings-based semantic search — the corpus is 19 clauses total, small enough
-            that every clause for a triggered area (<code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">DLG</code> +{' '}
-            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">KYC_AML</code>) goes to the model directly,
-            every time — no relevance-ranking step that could silently drop a clause. A deliberate
-            choice at this scale, not a glossed-over limitation: the report shows a verdict for
-            every clause considered, not a curated subset. Would need to change if the corpus grew
-            into the hundreds of clauses; it hasn&apos;t yet.
+            Not embeddings-based semantic search — retrieval happens in two steps, both direct
+            filters, no ranking. First, the product&apos;s declared category (Step 1) picks which
+            regulatory areas are even worth testing — a{' '}
+            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">Wallet</code> only pulls{' '}
+            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">KYC_AML</code>, a{' '}
+            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">Digital Lending</code> product pulls{' '}
+            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">DLG</code> +{' '}
+            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">KYC_AML</code> (see{' '}
+            <code className="text-xs font-mono bg-surface px-1 py-0.5 rounded text-accent">lib/categoryMapping.ts</code>).
+            Second, every clause within those selected areas — 19 total across both today — goes
+            to the model directly, no further filtering. A deliberate choice at this scale: the
+            report shows a verdict for every clause actually in scope, not a curated subset. Would
+            need real ranking if the corpus grew into the hundreds of clauses per area; it
+            hasn&apos;t yet.
           </p>
         </section>
 

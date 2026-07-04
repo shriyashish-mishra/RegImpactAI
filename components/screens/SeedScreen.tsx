@@ -5,13 +5,14 @@ import { Button }        from '@/components/ui/button'
 import { Textarea }      from '@/components/ui/textarea'
 import ScopeBoundaryNote from '@/components/primitives/ScopeBoundaryNote'
 import QuotaExceededScreen from '@/components/primitives/QuotaExceededScreen'
-import type { DraftModel, SynthesisResponse, QuotaExceededResponse } from '@/lib/types'
+import type { DraftModel, SynthesisResponse, QuotaExceededResponse, StructuredProductInfo } from '@/lib/types'
 
 type Props = {
+  structuredInfo: StructuredProductInfo
   onComplete: (assessmentId: string, model: DraftModel) => void
 }
 
-export default function SeedScreen({ onComplete }: Props) {
+export default function SeedScreen({ structuredInfo, onComplete }: Props) {
   const [description, setDescription] = useState('')
   const [loading, setLoading]         = useState(false)
   const [error, setError]             = useState<string | null>(null)
@@ -28,7 +29,7 @@ export default function SeedScreen({ onComplete }: Props) {
       const res = await fetch('/api/synthesize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: description.trim() }),
+        body: JSON.stringify({ structuredInfo, description: description.trim() }),
       })
 
       const data = await res.json()
@@ -59,11 +60,13 @@ export default function SeedScreen({ onComplete }: Props) {
     <div className="flex flex-col gap-8 p-6 bg-surface border border-border rounded-xl">
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-          Describe your product
+          Describe your product&apos;s workflow
         </h1>
         <p className="text-muted text-sm leading-relaxed">
-          Tell me what your fintech product does. I&apos;ll identify which RBI regulations
-          apply and which parts of your product they affect.
+          The structured fields already captured the basics — {structuredInfo.category.toLowerCase()},{' '}
+          {structuredInfo.capabilities.length > 0 ? `${structuredInfo.capabilities.length} capabilities, ` : ''}
+          who it&apos;s for. Now describe the workflow, the customer journey, and any unique
+          features that weren&apos;t captured above — the assessment focuses on this nuance.
         </p>
       </div>
 
@@ -72,9 +75,9 @@ export default function SeedScreen({ onComplete }: Props) {
           value={description}
           onChange={e => setDescription(e.target.value)}
           placeholder={
-            'e.g. We offer instant personal loans up to ₹2L via a mobile app. ' +
-            'Customers complete video KYC, receive a loan offer, and repay in EMIs. ' +
-            'We also offer a BNPL option at merchant checkout.'
+            'e.g. Customers apply through our mobile app, complete video KYC, and get an ' +
+            'instant loan offer with a Key Fact Statement shown before confirmation. Loans ' +
+            'disburse directly to the customer\'s bank account and repay via EMI.'
           }
           rows={6}
           className="resize-none"

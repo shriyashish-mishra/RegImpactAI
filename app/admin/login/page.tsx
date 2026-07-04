@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -38,14 +39,13 @@ export default function AdminLoginPage() {
           <p className="text-sm text-muted">Report history — owner access only.</p>
         </div>
         <label htmlFor="admin-password" className="sr-only">Password</label>
-        <input
+        <Input
           id="admin-password"
           type="password"
           value={password}
           onChange={e => setPassword(e.target.value)}
           placeholder="Password"
           autoFocus
-          className="flex h-9 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:border-accent"
         />
         {error && <p className="text-sm text-red-300">{error}</p>}
         <Button variant="accent" type="submit" disabled={loading || password.length === 0}>

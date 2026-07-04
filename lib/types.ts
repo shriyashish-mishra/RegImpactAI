@@ -9,7 +9,80 @@
 // 'report' is a separate route (/report/[id]), not a Step.
 // =============================================================================
 
-export type Step = 'seed' | 'mirror' | 'discovery' | 'generating'
+export type Step = 'product_info' | 'seed' | 'mirror' | 'discovery' | 'generating'
+
+
+// =============================================================================
+// STRUCTURED PRODUCT INFO (onboarding Step 1)
+//
+// Captured before any Gemini call — the point is to give the model ground
+// truth instead of asking it to infer things a form field already answers.
+// Every synthesize/questions/generate prompt is told to trust these fields
+// over anything it would otherwise infer, and only infer what's missing.
+// =============================================================================
+
+export type ProductCategory =
+  | 'Digital Lending'
+  | 'BNPL'
+  | 'Payments'
+  | 'Wallet'
+  | 'Neobank'
+  | 'Invoice Financing'
+  | 'Wealth Management'
+  | 'Investment Platform'
+  | 'Insurance'
+  | 'Lending Marketplace'
+  | 'Other'
+
+export type TargetCustomer =
+  | 'Retail Consumers'
+  | 'SMEs'
+  | 'Enterprises'
+  | 'Merchants'
+  | 'Banks'
+  | 'NBFCs'
+
+export type RegulatedEntityType =
+  | 'RBI Regulated NBFC'
+  | 'Bank'
+  | 'FinTech partnered with NBFC'
+  | 'Payment Aggregator'
+  | 'PPI Issuer'
+  | 'Other'
+
+export type Capability =
+  | 'Aadhaar eKYC'
+  | 'PAN Verification'
+  | 'Video KYC'
+  | 'CKYC'
+  | 'Credit Bureau Checks'
+  | 'UPI'
+  | 'UPI AutoPay'
+  | 'eSign'
+  | 'Digital Loan Agreement'
+  | 'Loan Disbursement'
+  | 'EMI'
+  | 'Collections'
+  | 'Fraud Detection'
+  | 'AI Underwriting'
+  | 'WhatsApp Notifications'
+  | 'SMS'
+  | 'Email'
+  | 'Credit Reporting'
+  | 'Device Fingerprinting'
+  | 'Risk Engine'
+  | 'OCR'
+  | 'Document Upload'
+
+export type StructuredProductInfo = {
+  product_name:     string
+  industry:         string // fixed to 'FinTech' for now — no other industries supported yet
+  category:         ProductCategory
+  geography:        string // fixed to 'India' for now
+  target_customer:  TargetCustomer
+  regulated_entity: RegulatedEntityType
+  capabilities:     Capability[]
+}
 
 
 // =============================================================================
@@ -50,8 +123,12 @@ export type TriggeredArea = {
 
 // What the model returns from synthesis — no DB identity yet.
 // narration[] is displayed during streaming, then discarded.
+// structuredInfo is echoed straight back from the request, not regenerated
+// by Gemini — the whole point of Step 1 is that these fields are ground
+// truth, never re-inferred and potentially altered by the model.
 export type DraftModel = {
   product_name:    string
+  structuredInfo:  StructuredProductInfo
   elements:        ProductElement[]
   triggered_areas: TriggeredArea[]
   narration:       string[]
@@ -80,6 +157,7 @@ export type QuotaExceededResponse = {
 export type ConfirmedModel = {
   assessment_id:   string
   product_name:    string
+  structuredInfo:  StructuredProductInfo
   elements:        ProductElement[]
   triggered_areas: TriggeredArea[]
 }

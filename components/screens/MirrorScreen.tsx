@@ -3,6 +3,7 @@
 import { Badge }         from '@/components/ui/badge'
 import { Button }        from '@/components/ui/button'
 import ConfidenceBadge   from '@/components/primitives/ConfidenceBadge'
+import { computeReadinessScore } from '@/lib/onboarding/readiness'
 import type { DraftModel, ConfirmedModel, ProductElement, TriggeredArea } from '@/lib/types'
 
 type Props = {
@@ -31,60 +32,116 @@ export default function MirrorScreen({ draftModel, assessmentId, onConfirm, onSt
     const confirmed: ConfirmedModel = {
       assessment_id:   assessmentId,
       product_name:    draftModel.product_name,
+      structuredInfo:  draftModel.structuredInfo,
       elements:        draftModel.elements,
       triggered_areas: draftModel.triggered_areas,
     }
     onConfirm(confirmed)
   }
 
-  const positive  = draftModel.elements.filter(e => !e.is_negative)
-  const negative  = draftModel.elements.filter(e =>  e.is_negative)
+  const { structuredInfo } = draftModel
+  const inferred  = draftModel.elements.filter(e => !e.is_negative)
+  const missing   = draftModel.elements.filter(e =>  e.is_negative)
   const triggered = draftModel.triggered_areas.filter(a => a.status === 'triggered')
   const others    = draftModel.triggered_areas.filter(a => a.status !== 'triggered')
+  const readiness = computeReadinessScore(structuredInfo, draftModel.elements)
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-          Here&apos;s what I understand about {draftModel.product_name}
-        </h1>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+            Here&apos;s what I understand about {draftModel.product_name}
+          </h1>
+          <div className="flex flex-col items-end gap-0.5 shrink-0">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-subtle">Assessment Readiness</span>
+            <span className="text-xl font-semibold text-accent">{readiness}%</span>
+          </div>
+        </div>
         <p className="text-muted text-sm leading-relaxed">
-          Review what I&apos;ve inferred. If something is wrong, start over with a more
-          detailed description. Confirm when this looks right.
+          Structured fields you provided are trusted as-is. Everything else below was inferred —
+          review it, and confirm when this looks right.
         </p>
       </div>
 
-      {/* Product elements */}
+      {/* What you told us */}
       <section className="flex flex-col gap-3">
-        <h2 className="font-mono text-xs font-semibold text-subtle uppercase tracking-widest">
-          Product elements
+        <h2 className="font-mono text-xs font-semibold text-accent uppercase tracking-widest">
+          What you told us
         </h2>
-        <div className="flex flex-col gap-2">
-          {positive.map((el, i) => (
-            <div key={i} className="flex items-center justify-between px-4 py-3 bg-surface border border-border rounded-lg">
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-subtle font-medium w-16 shrink-0">
-                  {ELEMENT_LABEL[el.element_type]}
-                </span>
-                <span className="text-sm text-foreground">{el.label}</span>
-              </div>
-              <ConfidenceBadge level={el.confidence} />
-            </div>
-          ))}
-          {negative.map((el, i) => (
-            <div key={i} className="flex items-center justify-between px-4 py-3 bg-surface/50 border border-dashed border-border rounded-lg">
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-subtle font-medium w-16 shrink-0">
-                  {ELEMENT_LABEL[el.element_type]}
-                </span>
-                <span className="text-sm text-subtle italic">
-                  {el.label} — not detected
-                </span>
-              </div>
-              <span className="text-xs text-subtle">add if I missed it</span>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {[
+            { label: 'Industry', value: structuredInfo.industry },
+            { label: 'Category', value: structuredInfo.category },
+            { label: 'Geography', value: structuredInfo.geography },
+            { label: 'Target Customer', value: structuredInfo.target_customer },
+            { label: 'Regulated Entity', value: structuredInfo.regulated_entity },
+          ].map(f => (
+            <div key={f.label} className="flex flex-col gap-1 px-3 py-2.5 bg-surface border border-accent/20 rounded-lg">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-subtle">{f.label}</span>
+              <span className="text-sm text-foreground">{f.value}</span>
             </div>
           ))}
         </div>
+        {structuredInfo.capabilities.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {structuredInfo.capabilities.map(cap => (
+              <span key={cap} className="text-xs font-medium px-2.5 py-1 rounded-full bg-accent/10 border border-accent/30 text-accent">
+                {cap}
+              </span>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* What we inferred */}
+      <section className="flex flex-col gap-3">
+        <h2 className="font-mono text-xs font-semibold text-subtle uppercase tracking-widest">
+          What we inferred
+        </h2>
+        {inferred.length === 0 ? (
+          <p className="text-xs text-subtle italic">Nothing further inferred beyond what you told us.</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {inferred.map((el, i) => (
+              <div key={i} className="flex items-center justify-between px-4 py-3 bg-surface border border-border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-subtle font-medium w-16 shrink-0">
+                    {ELEMENT_LABEL[el.element_type]}
+                  </span>
+                  <span className="text-sm text-foreground">{el.label}</span>
+                </div>
+                <ConfidenceBadge level={el.confidence} />
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Information still missing */}
+      <section className="flex flex-col gap-3">
+        <h2 className="font-mono text-xs font-semibold text-amber-300 uppercase tracking-widest">
+          Information still missing
+        </h2>
+        {missing.length === 0 ? (
+          <p className="text-xs text-subtle italic">No critical gaps flagged yet.</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {missing.map((el, i) => (
+              <div key={i} className="flex items-center justify-between px-4 py-3 bg-amber-500/5 border border-dashed border-amber-500/30 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-subtle font-medium w-16 shrink-0">
+                    {ELEMENT_LABEL[el.element_type]}
+                  </span>
+                  <span className="text-sm text-amber-200 italic">
+                    {el.label} — not detected
+                  </span>
+                </div>
+                <span className="text-xs text-subtle">Discovery may ask about this</span>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Triggered areas */}

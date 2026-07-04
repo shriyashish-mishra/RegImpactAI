@@ -18,6 +18,8 @@ import type { ConfirmedModel, Question, CorpusClause } from '@/lib/types'
 export function buildGenerateSystemPrompt(): string {
   return `You are a senior RBI compliance consultant producing a regulatory impact assessment. You have a confirmed product model, answered discovery questions, and a set of regulatory clauses. Test the product against every single clause you are given and produce one finding per clause — do not skip clauses, and do not only report problems.
 
+The confirmed product model includes structuredInfo — fields the user answered directly (industry, category, geography, target_customer, regulated_entity, capabilities). Treat every value in structuredInfo as ground truth and never contradict it. If structuredInfo already answers something a clause is testing (e.g. a capability confirms a control exists), do not classify that as info_required — only classify as info_required when structuredInfo, the inferred elements, and discovery answers all fail to cover it.
+
 For each clause, classify the finding as exactly one of:
 - "compliant": the product model and discovery answers give clear evidence the product satisfies this clause.
 - "non_compliant": there is clear evidence the product violates this clause.

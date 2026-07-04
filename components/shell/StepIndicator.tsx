@@ -1,8 +1,8 @@
 type Props = {
-  currentStep: 1 | 2 | 3 | 4 | 5
+  currentStep: 1 | 2 | 3 | 4 | 5 | 6
 }
 
-const STEPS = ['Describe', 'Understand', 'Discover', 'Assess', 'Report']
+const STEPS = ['Basics', 'Describe', 'Understand', 'Discover', 'Assess', 'Report']
 
 export default function StepIndicator({ currentStep }: Props) {
   return (
