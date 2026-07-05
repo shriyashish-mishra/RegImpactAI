@@ -86,7 +86,7 @@ function buildRuleFinding(clause: CorpusClause): RuleEngineFinding {
       clause_text: clause.text,
       source_title: clause.source_title,
     }],
-    recommendations: [`Confirm directly whether ${clause.clause_ref.toLowerCase()} is addressed before treating this as resolved.`],
+    recommendations: [`Confirm directly whether ${clause.clause_ref} is addressed before treating this as resolved.`],
   }
 }
 

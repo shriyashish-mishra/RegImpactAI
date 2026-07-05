@@ -102,6 +102,21 @@ export async function POST(req: Request) {
     return Response.json({ error: 'Server misconfigured: missing Supabase environment variables' }, { status: 500 })
   }
 
+  // Re-persist every answer this request actually used, regardless of
+  // whether the earlier per-keystroke PATCH (/api/questions/[id]) already
+  // succeeded. That PATCH is deliberately best-effort — this call is the
+  // backstop, so the report's discovery summary (read from this table)
+  // can never contradict the findings below it, which quote these same
+  // answers as evidence. Best-effort itself: never blocks generation.
+  const answeredQuestions = questions.filter(q => q.answer && q.answer.trim().length > 0)
+  if (answeredQuestions.length > 0) {
+    await Promise.all(
+      answeredQuestions.map(q =>
+        supabase.from('questions').update({ answer: q.answer }).eq('id', q.id)
+      )
+    ).catch(err => console.error('[generate] Failed to re-persist discovery answers:', err))
+  }
+
   // Category-driven retrieval filtering: which areas are even worth testing
   // is decided from the Step 1 categories, not a fixed constant tested
   // against every product regardless of what it actually is. See

@@ -29,6 +29,8 @@ This project focuses on trust. Every compliance finding is backed by verified re
 * Interactive architecture walkthrough
 * End-to-end product case study
 * Zero-setup sample demo
+* 60-second cinematic product demo video on the homepage (built with Remotion — see `remotion/`)
+* Early quota check before onboarding starts, so a visitor never fills in the intake form only to discover the daily AI budget is already exhausted (`/api/quota-status`, see `lib/quota.ts`)
 
 ## Tech Stack
 

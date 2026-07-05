@@ -43,6 +43,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# LinkedIn/social marketing assets — never part of the app or the repo
+/marketing/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

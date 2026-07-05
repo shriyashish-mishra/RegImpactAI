@@ -33,6 +33,7 @@ export default function ChipMultiSelect<T extends string>({ label, options, sele
               aria-pressed={isSelected}
               className={[
                 'text-xs font-medium px-3 py-1.5 rounded-full border transition-colors',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
                 isSelected
                   ? 'bg-accent/10 border-accent text-accent'
                   : 'bg-surface-raised border-border text-muted hover:border-subtle hover:text-foreground',

@@ -12,7 +12,7 @@
   --border:         #27272a; /* zinc-800 */
   --foreground:     #fafafa; /* zinc-50 — headings, high-emphasis text */
   --muted:          #a1a1aa; /* zinc-400 — body copy */
-  --subtle:         #71717a; /* zinc-500 — meta text, timestamps */
+  --subtle:         #7a7a83; /* zinc-500, nudged lighter — meta text, timestamps. Original #71717a measured 4.12:1 on the background, under WCAG AA's 4.5:1 for normal text; this clears 4.68:1 while staying visually the dimmest tier. */
   --accent:         #34d399; /* emerald-400 */
   --accent-strong:  #10b981; /* emerald-500 — accent on light/white backgrounds */
 }

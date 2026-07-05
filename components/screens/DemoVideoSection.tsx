@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Volume2, VolumeX } from 'lucide-react'
 import SectionLabel from '@/components/primitives/SectionLabel'
 
@@ -8,10 +8,22 @@ import SectionLabel from '@/components/primitives/SectionLabel'
  * Browsers block autoplay-with-sound — muted+loop is the only way this
  * plays automatically on page load. The lofi bed is there for anyone who
  * unmutes; the video and captions carry the story either way.
+ *
+ * Playback is started from a post-mount effect rather than the native
+ * `autoPlay` attribute, and `preload="none"` keeps the browser from
+ * buffering the 22MB file until after that first paint — `autoPlay` was
+ * measured to stall the entire hero's initial render (header, byline, even
+ * sibling sections) waiting on video decode. Explicit width/height give the
+ * browser the real aspect ratio immediately, so there's no layout jump
+ * whether or not the video has loaded yet.
  */
 export default function DemoVideoSection() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [muted, setMuted] = useState(true)
+
+  useEffect(() => {
+    videoRef.current?.play().catch(() => {})
+  }, [])
 
   function toggleMute() {
     const video = videoRef.current
@@ -32,7 +44,9 @@ export default function DemoVideoSection() {
           ref={videoRef}
           src="/video/regimpact-demo.mp4"
           poster="/video/regimpact-demo-poster.png"
-          autoPlay
+          width={1920}
+          height={1080}
+          preload="none"
           muted
           loop
           playsInline
