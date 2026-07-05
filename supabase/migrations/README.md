@@ -11,6 +11,11 @@ Apply in numeric order via the Supabase SQL Editor:
 0006_add_verified_to_finding_citations.sql
 0007_disable_rls.sql
 0008_add_finding_classification_and_evidence.sql
+0009_create_daily_usage.sql
+0010_create_ai_cache.sql
+0011_create_optimization_metrics.sql
+0012_add_document_metadata_to_citations.sql
+0013_create_admin_login_attempts.sql
 ```
 
 These tables are everything the vertical slice (Synthesize → Discovery →
@@ -46,6 +51,23 @@ rows default to `potential_gap` since every finding written before this
 migration was, by construction, a gap. `confidence_reasoning`,
 `evidence_found`, `evidence_missing`, and `inference_made` (also 0008) make
 the model's reasoning explicit rather than just a confidence label.
+
+`daily_usage` (0009) is the hard cost-protection quota shared across
+synthesize/questions/generate — see `lib/quota.ts`. `ai_cache` (0010) is the
+per-stage cache keyed on normalized inputs plus prompt/rule/corpus versions,
+so bumping a version in `lib/ai/versions.ts` naturally stops matching old
+rows instead of needing a migration to invalidate them. `optimization_metrics`
+(0011) tracks the business impact of the cache + rule engine for the admin
+dashboard, separately from the quota counter itself. `finding_citations`
+document metadata (0012) adds Knowledge Base traceability (document
+version, publication date, authority) — nullable, so pre-migration rows and
+reports keep rendering exactly as before.
+
+`admin_login_attempts` (0013) rate-limits `/api/admin/login` per IP — the
+password comparison was already timing-safe (`lib/adminSession.ts`), but
+nothing previously stopped unlimited guesses over the network. Same
+atomic-check-and-increment pattern as `daily_usage`, with a rolling window
+instead of a calendar day.
 
 Schema matches `lib/types.ts` exactly as it exists in this repo today:
 `findings` has no `run_id` column, and `recommendations` has no `status`

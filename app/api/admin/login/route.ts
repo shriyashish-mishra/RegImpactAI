@@ -2,6 +2,8 @@ import { z } from 'zod'
 import { cookies } from 'next/headers'
 import { requireEnv } from '@/lib/env'
 import { verifyAdminPassword, createAdminSessionToken, ADMIN_SESSION_COOKIE } from '@/lib/adminSession'
+import { createServerClient } from '@/lib/supabase/server'
+import { checkAndIncrementLoginAttempt, resetLoginAttempts, getClientIp } from '@/lib/adminLoginRateLimit'
 
 const BodySchema = z.object({
   password: z.string().min(1),
@@ -27,9 +29,28 @@ export async function POST(req: Request) {
     return Response.json({ error: 'Invalid request' }, { status: 400 })
   }
 
+  let supabase: ReturnType<typeof createServerClient>
+  try {
+    supabase = createServerClient()
+  } catch (err) {
+    console.error('[admin/login]', err)
+    return Response.json({ error: 'Server misconfigured: missing Supabase environment variables' }, { status: 500 })
+  }
+
+  // Checked and consumed before the password comparison, never after — a
+  // request over the attempt limit must never reach verifyAdminPassword at
+  // all. See lib/adminLoginRateLimit.ts.
+  const ip = getClientIp(req)
+  const rateLimit = await checkAndIncrementLoginAttempt(supabase, ip)
+  if (!rateLimit.allowed) {
+    return Response.json({ error: 'Too many login attempts. Try again later.' }, { status: 429 })
+  }
+
   if (!verifyAdminPassword(parsed.data.password)) {
     return Response.json({ error: 'Incorrect password' }, { status: 401 })
   }
+
+  await resetLoginAttempts(supabase, ip)
 
   const cookieStore = await cookies()
   cookieStore.set(ADMIN_SESSION_COOKIE, createAdminSessionToken(), {
