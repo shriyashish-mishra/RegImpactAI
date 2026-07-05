@@ -16,6 +16,7 @@ Apply in numeric order via the Supabase SQL Editor:
 0011_create_optimization_metrics.sql
 0012_add_document_metadata_to_citations.sql
 0013_create_admin_login_attempts.sql
+0014_revoke_anon_delete.sql
 ```
 
 These tables are everything the vertical slice (Synthesize → Discovery →
@@ -68,6 +69,16 @@ password comparison was already timing-safe (`lib/adminSession.ts`), but
 nothing previously stopped unlimited guesses over the network. Same
 atomic-check-and-increment pattern as `daily_usage`, with a rolling window
 instead of a calendar day.
+
+0014 is a deliberately partial RLS mitigation, not the full project: RLS
+(0007) stays disabled — see that entry above for why turning it on properly
+needs its own careful pass — but nothing in the app's own code ever issues
+a DELETE against any table (verified directly), so revoking DELETE from the
+`anon` role costs zero functionality while closing the single worst-case
+action a leaked `SUPABASE_ANON_KEY` could take (wiping the database
+outright). `reset_login_attempts` (0013) is re-declared `SECURITY DEFINER`
+in this migration since it's the one legitimate delete in the app and would
+otherwise break under the revoked grant.
 
 Schema matches `lib/types.ts` exactly as it exists in this repo today:
 `findings` has no `run_id` column, and `recommendations` has no `status`

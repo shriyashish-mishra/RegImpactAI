@@ -86,9 +86,8 @@ ADMIN_PASSWORD=
 # Defaults to 18 if unset.
 MAX_DAILY_ASSESSMENTS=
 
-# Optional — both default to the real production values if unset
+# Optional — defaults to the real production value if unset
 NEXT_PUBLIC_SITE_URL=
-NEXT_PUBLIC_GITHUB_URL=
 ```
 
 `AI_INFERENCE_API_KEY` is the provider-neutral env var this app documents

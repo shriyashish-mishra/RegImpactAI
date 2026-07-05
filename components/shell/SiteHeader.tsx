@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { GITHUB_URL, LINKEDIN_URL, PORTFOLIO_URL } from '@/lib/site'
+import { LINKEDIN_URL, PORTFOLIO_URL } from '@/lib/site'
 
 type NavKey = 'home' | 'live' | 'sample' | 'case-study' | 'architecture' | 'knowledge-base'
 
@@ -17,7 +17,6 @@ const LINKS: { key: NavKey; href: string; label: string }[] = [
 
 const EXTERNAL_LINKS = [
   { key: 'work',     href: PORTFOLIO_URL, label: 'Work' },
-  { key: 'github',   href: GITHUB_URL,    label: 'GitHub' },
   { key: 'linkedin', href: LINKEDIN_URL,  label: 'LinkedIn' },
 ]
 
